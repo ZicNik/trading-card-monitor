@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "check",
+      "label": "npm: check",
+      "detail": "tsc --noEmit",
+      "problemMatcher": "$tsc"
+    },
+    {
+      "type": "npm",
+      "script": "lint",
+      "label": "npm: lint",
+      "detail": "eslint",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "type": "shell",
+      "command": "npm run check; npm run lint",
+      "label": "npm: check+lint",
+      "detail": "npx tsc --noEmit; npx eslint",
+      "problemMatcher": [
+        "$tsc",
+        "$eslint-stylish"
+      ],
+    }
+  ]
+}

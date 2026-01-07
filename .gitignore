@@ -1,0 +1,12 @@
+# External dependencies
+node_modules/
+
+# Build folders
+dist/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Database files
+*.db
+*.db-*
