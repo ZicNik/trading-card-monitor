@@ -1,6 +1,6 @@
-import { User, type UserRepository } from '@/core'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import type { CardCatalog } from '@/search'
+import { User, type UserRepository } from '@/user'
 import { SearchInitiatedPresenter, SearchInitiatedUseCase, type SearchInitiatedView, type SearchInitiatedViewModel } from './search/search-initiated'
 
 class TestUserRepository implements UserRepository {

@@ -1,4 +1,4 @@
-declare module '@/core' {
+declare module '@/user' {
   interface UserActivityRegistry {
     search: SearchActivity
   }

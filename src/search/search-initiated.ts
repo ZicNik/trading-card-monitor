@@ -1,4 +1,4 @@
-import type { UserRepository } from '@/core/user'
+import type { UserRepository } from '@/user'
 import { SearchSession } from './search-activity'
 
 // MARK: - Use Case
