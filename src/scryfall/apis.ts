@@ -1,13 +1,22 @@
 import { createClientConfig, createRequest, HttpClient } from '@/http'
 import type { ScryfallCard } from './types'
 
+export type ScryfallApisConfig = Partial<Readonly<{
+  timeoutMs: number
+  retries: number
+}>>
+
 /** @see {@link https://scryfall.com/docs/api} */
 export class ScryfallApis {
-  private readonly http = new HttpClient(createClientConfig({
-    baseUrl: 'https://api.scryfall.com',
-    timeoutMs: 5000,
-    retries: 2,
-  }))
+  private readonly http: HttpClient
+
+  constructor(config?: ScryfallApisConfig) {
+    this.http = new HttpClient(createClientConfig({
+      baseUrl: 'https://api.scryfall.com',
+      ...(config?.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
+      ...(config?.retries !== undefined ? { retries: config.retries } : {}),
+    }))
+  }
 
   /** @see {@link https://scryfall.com/docs/api/cards/search} */
   async cardsSearch(q: string, unique?: 'cards' | 'art' | 'prints' | 'sets'): Promise<{ data: ScryfallCard[] } | undefined> {

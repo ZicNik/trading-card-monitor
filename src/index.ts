@@ -28,7 +28,7 @@ class ConsoleSearchInitiatedView implements SearchInitiatedView {
 }
 
 // Compose dependencies
-const scryfallApis = new ScryfallApis()
+const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const catalog: CardCatalog = new ScryfallCatalog(scryfallApis)
 const userRepo: UserRepository = new TestUserRepository()
 const searchInitiatedView: SearchInitiatedView = new ConsoleSearchInitiatedView()
