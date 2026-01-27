@@ -5,8 +5,7 @@ const schema = z.object({
   BOT_TOKEN: z.string(),
   WEBHOOK_DOMAIN: z.string(),
   PORT: z.coerce.number().nonnegative().int(),
-  // Optional tls configuration
-  SECURE_PORT: z.coerce.number().nonnegative().int().optional(),
+  // Optional TLS configuration
   CERT_PATH: z.string().optional(),
   KEY_PATH: z.string().optional(),
 })
@@ -18,15 +17,14 @@ export const APP_CONFIG = (() => {
     throw new Error(`Invalid dontenv configuration:\n\t${result.error.message}`)
   const data = result.data
   const tls = (() => {
-    // All or nothing for tls configuration
-    if (data.SECURE_PORT !== undefined && data.CERT_PATH !== undefined && data.KEY_PATH !== undefined)
+    // All or nothing for TLS configuration
+    if (data.CERT_PATH !== undefined && data.KEY_PATH !== undefined)
       return {
-        securePort: data.SECURE_PORT,
         certPath: data.CERT_PATH,
         keyPath: data.KEY_PATH,
       } as const
-    if (!(data.SECURE_PORT === undefined && data.CERT_PATH === undefined && data.KEY_PATH === undefined))
-      throw new Error('Invalid tls configuration in dotenv')
+    if (!(data.CERT_PATH === undefined && data.KEY_PATH === undefined))
+      throw new Error('Invalid TLS configuration in dotenv')
     return undefined
   })()
   return {
