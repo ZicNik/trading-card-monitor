@@ -7,6 +7,13 @@ dist/
 # TypeScript cache
 *.tsbuildinfo
 
+# dotenv files
+.env
+.env.*
+
 # Database files
 *.db
 *.db-*
+
+# SSL certificates and keys
+ssl/
