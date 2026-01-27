@@ -10,11 +10,14 @@
   "types": "dist/index.d.ts",
   "dependencies": {
     "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "grammy": "^1.39.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@stylistic/eslint-plugin": "^5.6.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.0.2",
     "eslint": "^9.39.1",
     "globals": "^17.0.0",
