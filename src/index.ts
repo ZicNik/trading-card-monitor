@@ -1,19 +1,19 @@
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import type { CardCatalog } from '@/search'
 import { User, type UserRepository } from '@/user'
+import { GRAMMY_BOT } from './grammy'
 import { SearchInitiatedPresenter, SearchInitiatedUseCase, type SearchInitiatedView, type SearchInitiatedViewModel } from './search/search-initiated'
 
 class TestUserRepository implements UserRepository {
-  private readonly users = (() => {
-    const users = new Map<string, User>()
-    users.set('1', new User('1'))
-    users.set('2', new User('2'))
-    users.set('3', new User('3'))
-    return users
-  })()
+  private readonly users = new Map<string, User>()
 
   findById(id: string): User | undefined {
-    return this.users.get(id)
+    let user = this.users.get(id)
+    if (user === undefined) {
+      user = new User(id)
+      this.users.set(id, user)
+    }
+    return user
   }
 
   save(user: User) {
@@ -27,13 +27,22 @@ class ConsoleSearchInitiatedView implements SearchInitiatedView {
   }
 }
 
+class BotSearchInitiatedView implements SearchInitiatedView {
+  render(vm: SearchInitiatedViewModel): void {
+    void GRAMMY_BOT.api.sendMessage(vm.recipientId, 'Search initiated')
+  }
+}
+
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const catalog: CardCatalog = new ScryfallCatalog(scryfallApis)
 const userRepo: UserRepository = new TestUserRepository()
-const searchInitiatedView: SearchInitiatedView = new ConsoleSearchInitiatedView()
-const searchInitiatedPresenter = new SearchInitiatedPresenter(searchInitiatedView)
-const searchInitiatedUseCase = new SearchInitiatedUseCase(userRepo, searchInitiatedPresenter)
+const consoleSearchInitiatedView: SearchInitiatedView = new ConsoleSearchInitiatedView()
+const consoleSearchInitiatedPresenter = new SearchInitiatedPresenter(consoleSearchInitiatedView)
+const consoleSearchInitiatedUseCase = new SearchInitiatedUseCase(userRepo, consoleSearchInitiatedPresenter)
+const botSearchInitiatedView: SearchInitiatedView = new BotSearchInitiatedView()
+const botSearchInitiatedPresenter = new SearchInitiatedPresenter(botSearchInitiatedView)
+const botSearchInitiatedUseCase = new SearchInitiatedUseCase(userRepo, botSearchInitiatedPresenter)
 
 // Example usage of the CardCatalog
 
@@ -60,12 +69,24 @@ testCardCatalog()
 
 // Example usage of the SearchInitiatedUseCase
 
-function testSearchInitiatedUseCase() {
+function testSearchInitiatedUseCaseOnConsole() {
   const userBefore = userRepo.findById('1')
   console.log('Before:', userBefore)
-  searchInitiatedUseCase.execute({ userId: '1' })
+  consoleSearchInitiatedUseCase.execute({ userId: '1' })
   const userAfter = userRepo.findById('1')
   console.log('After:', userAfter)
 }
 
-testSearchInitiatedUseCase()
+testSearchInitiatedUseCaseOnConsole()
+
+function setupSearchInitiatedUseCaseOnBot() {
+  // Controller triggering the use case
+  GRAMMY_BOT.command('search', (ctx) => {
+    if (ctx.from?.id === undefined)
+      return
+    const userId = ctx.from.id.toString()
+    botSearchInitiatedUseCase.execute({ userId })
+  })
+}
+
+setupSearchInitiatedUseCaseOnBot()
