@@ -2,6 +2,7 @@ import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import type { CardCatalog } from '@/search'
 import { User, type UserRepository } from '@/user'
 import { GRAMMY_BOT } from './grammy'
+import { GrammyInputPort } from './grammy/input-port'
 import { SearchInitiatedPresenter, SearchInitiatedUseCase, type SearchInitiatedView, type SearchInitiatedViewModel } from './search/search-initiated'
 
 class TestUserRepository implements UserRepository {
@@ -81,11 +82,18 @@ testSearchInitiatedUseCaseOnConsole()
 
 function setupSearchInitiatedUseCaseOnBot() {
   // Controller triggering the use case
-  GRAMMY_BOT.command('search', (ctx) => {
-    if (ctx.from?.id === undefined)
-      return
-    const userId = ctx.from.id.toString()
-    botSearchInitiatedUseCase.execute({ userId })
+  // GRAMMY_BOT.command('search', (ctx) => {
+  //   if (ctx.from?.id === undefined)
+  //     return
+  //   const userId = ctx.from.id.toString()
+  //   botSearchInitiatedUseCase.execute({ userId })
+  // })
+  const inputPort = new GrammyInputPort()
+  inputPort.onCommand('search', async (context) => {
+    await GRAMMY_BOT.api.sendMessage(context.chatId, `Received search command`)
+  })
+  inputPort.onMessage(async (context) => {
+    await GRAMMY_BOT.api.sendMessage(context.chatId, `Received message: ${context.text}`)
   })
 }
 
