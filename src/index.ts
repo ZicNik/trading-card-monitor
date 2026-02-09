@@ -3,6 +3,7 @@ import type { CardCatalog } from '@/search'
 import { User, type UserRepository } from '@/user'
 import { GRAMMY_BOT } from './grammy'
 import { GrammyInputPort } from './grammy/input-port'
+import { GrammyOutputPort } from './grammy/output-port'
 import { SearchInitiatedPresenter, SearchInitiatedUseCase, type SearchInitiatedView, type SearchInitiatedViewModel } from './search/search-initiated'
 
 class TestUserRepository implements UserRepository {
@@ -89,11 +90,12 @@ function setupSearchInitiatedUseCaseOnBot() {
   //   botSearchInitiatedUseCase.execute({ userId })
   // })
   const inputPort = new GrammyInputPort()
+  const outputPort = new GrammyOutputPort()
   inputPort.onCommand('search', async (context) => {
-    await GRAMMY_BOT.api.sendMessage(context.chatId, `Received search command`)
+    await outputPort.sendMessage(context.chatId, `Received search command`)
   })
   inputPort.onMessage(async (context) => {
-    await GRAMMY_BOT.api.sendMessage(context.chatId, `Received message: ${context.text}`)
+    await outputPort.sendMessage(context.chatId, `Received message: ${context.text}`)
   })
 }
 
