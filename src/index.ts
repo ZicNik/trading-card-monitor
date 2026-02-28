@@ -1,6 +1,7 @@
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import type { CardCatalog } from '@/search'
 import { User, type UserRepository } from '@/user'
+import { testSM } from './bot-ui/machine-test'
 import { GRAMMY_BOT } from './grammy'
 import { GrammyInputPort } from './grammy/input-port'
 import { GrammyOutputPort } from './grammy/output-port'
@@ -59,15 +60,15 @@ async function testCardCatalog() {
   console.log(card)
 }
 
-testCardCatalog()
-  .then(() => {
-    testCardCatalog()
-      .then(() => {
-        void testCardCatalog()
-      })
-      .catch(console.error)
-  })
-  .catch(console.error)
+// testCardCatalog()
+//   .then(() => {
+//     testCardCatalog()
+//       .then(() => {
+//         void testCardCatalog()
+//       })
+//       .catch(console.error)
+//   })
+//   .catch(console.error)
 
 // Example usage of the SearchInitiatedUseCase
 
@@ -79,7 +80,7 @@ function testSearchInitiatedUseCaseOnConsole() {
   console.log('After:', userAfter)
 }
 
-testSearchInitiatedUseCaseOnConsole()
+// testSearchInitiatedUseCaseOnConsole()
 
 function setupSearchInitiatedUseCaseOnBot() {
   // Controller triggering the use case
@@ -99,4 +100,6 @@ function setupSearchInitiatedUseCaseOnBot() {
   })
 }
 
-setupSearchInitiatedUseCaseOnBot()
+// setupSearchInitiatedUseCaseOnBot()
+
+testSM().catch(console.error)
