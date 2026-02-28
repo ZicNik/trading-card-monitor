@@ -18,10 +18,13 @@ export const rootMachine = setup({
   },
   actions: {
     forwardToActiveChild: forwardTo(({ context, system }) => {
-      const activeChild = context.activeChild
-      if (activeChild === undefined)
+      const id = context.activeChild
+      if (id === undefined)
         throw new Error('No active child to forward to')
-      return system.get(activeChild) as AnyActorRef
+      const actor = system.get(id) as AnyActorRef | undefined
+      if (actor === undefined)
+        throw new Error(`No active child to forward to for id '${id}'`)
+      return actor
     }),
   },
   actors: {
