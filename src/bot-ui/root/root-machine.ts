@@ -1,6 +1,10 @@
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
 import { searchMachine, searchMachineId } from '../search/search-machine'
 
+export type RootMachineEvent
+  = | { type: 'command', command: string }
+    | { type: 'message', text: string }
+
 export const rootMachine = setup({
   types: {
     input: {} as { chatId: string },
@@ -8,9 +12,7 @@ export const rootMachine = setup({
       chatId: string
       activeChild?: string
     },
-    events: {} as
-    | { type: 'command', command: string }
-    | { type: 'message', text: string },
+    events: {} as RootMachineEvent,
   },
   guards: {
     isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',

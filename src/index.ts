@@ -1,7 +1,8 @@
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import type { CardCatalog } from '@/search'
 import { User, type UserRepository } from '@/user'
-import { testSM } from './bot-ui/machine-test'
+import { BotUI } from './bot-ui/bot-ui'
+import { InMemoryStateMachineStorage } from './bot-ui/state-machine-storage'
 import { GRAMMY_BOT } from './grammy'
 import { GrammyInputPort } from './grammy/input-port'
 import { GrammyOutputPort } from './grammy/output-port'
@@ -102,4 +103,10 @@ function setupSearchInitiatedUseCaseOnBot() {
 
 // setupSearchInitiatedUseCaseOnBot()
 
-testSM().catch(console.error)
+const botUI = new BotUI(new GrammyInputPort(), new InMemoryStateMachineStorage())
+
+function testBotUI() {
+  botUI.start()
+}
+
+testBotUI()
