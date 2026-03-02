@@ -1,12 +1,14 @@
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine } from 'xstate'
 import type { BotInputPort } from './bot-input'
+import type { BotOutputPort } from './bot-output'
 import { rootMachine, type RootMachineEvent } from './root/root-machine'
 import type { StateMachineStorage } from './state-machine-storage'
 
 export class BotUI {
   constructor(
-    private readonly inputPort: BotInputPort,
     private readonly storage: StateMachineStorage,
+    private readonly inputPort: BotInputPort,
+    private readonly outputPort: BotOutputPort,
   ) {}
 
   start(): void {
@@ -21,7 +23,7 @@ export class BotUI {
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {
     const snapshot = await this.storage.hydrate(chatId)
     const actor = createActor(rootMachine, {
-      input: { chatId },
+      input: { outputPort: this.outputPort, chatId },
       ...(snapshot !== undefined ? { snapshot } : {}),
     })
     actor.start()

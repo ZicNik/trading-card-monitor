@@ -1,7 +1,5 @@
-import { GRAMMY_BOT } from '@/grammy'
 import { assign, fromPromise, setup } from 'xstate'
-
-// TODO: replace GRAMMY_BOT with an instance of `BotOutputPort`
+import type { BotOutputPort } from '../bot-output'
 
 type SearchResult = string
 
@@ -17,9 +15,11 @@ export const searchMachineId = 'searchMachine'
 export const searchMachine = setup({
   types: {
     input: {} as {
+      outputPort: BotOutputPort
       chatId: string
     },
     context: {} as {
+      outputPort: BotOutputPort
       chatId: string
       query?: string
     },
@@ -30,14 +30,14 @@ export const searchMachine = setup({
   },
   actions: {
     askForQuery: ({ context }) => {
-      void GRAMMY_BOT.api.sendMessage(context.chatId, 'What are you looking for?')
+      void context.outputPort.sendMessage(context.chatId, 'What are you looking for?')
     },
     showResult: ({ context }, params: SearchResult) => {
-      void GRAMMY_BOT.api.sendMessage(context.chatId, params)
+      void context.outputPort.sendMessage(context.chatId, params)
     },
   },
 }).createMachine({
-  context: ({ input }) => ({ chatId: input.chatId }),
+  context: ({ input }) => ({ outputPort: input.outputPort, chatId: input.chatId }),
   initial: 'awaitingQuery',
   states: {
     awaitingQuery: {

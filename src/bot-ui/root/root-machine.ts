@@ -1,4 +1,5 @@
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
+import type { BotOutputPort } from '../bot-output'
 import { searchMachine, searchMachineId } from '../search/search-machine'
 
 export type RootMachineEvent
@@ -7,8 +8,12 @@ export type RootMachineEvent
 
 export const rootMachine = setup({
   types: {
-    input: {} as { chatId: string },
+    input: {} as {
+      outputPort: BotOutputPort
+      chatId: string
+    },
     context: {} as {
+      outputPort: BotOutputPort
       chatId: string
       activeChild?: string
     },
@@ -33,9 +38,7 @@ export const rootMachine = setup({
     searchMachine,
   },
 }).createMachine({
-  context: ({ input }) => ({
-    chatId: input.chatId,
-  }),
+  context: ({ input }) => ({ outputPort: input.outputPort, chatId: input.chatId }),
   initial: 'idle',
   states: {
     idle: {
@@ -46,7 +49,7 @@ export const rootMachine = setup({
       invoke: {
         systemId: searchMachineId,
         src: 'searchMachine',
-        input: ({ context }) => ({ chatId: context.chatId }),
+        input: ({ context }) => ({ outputPort: context.outputPort, chatId: context.chatId }),
         onDone: { target: 'idle' },
       },
     },

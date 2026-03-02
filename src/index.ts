@@ -4,6 +4,7 @@ import { User, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
 import { InMemoryStateMachineStorage } from './bot-ui/state-machine-storage'
 import { GrammyInputPort } from './grammy/input-port'
+import { GrammyOutputPort } from './grammy/output-port'
 
 class TestUserRepository implements UserRepository {
   private readonly users = new Map<string, User>()
@@ -25,7 +26,11 @@ class TestUserRepository implements UserRepository {
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const catalog: CardCatalog = new ScryfallCatalog(scryfallApis)
-const botUI = new BotUI(new GrammyInputPort(), new InMemoryStateMachineStorage())
+const botUI = new BotUI(
+  new InMemoryStateMachineStorage(),
+  new GrammyInputPort(),
+  new GrammyOutputPort(),
+)
 
 // Example usage of the CardCatalog
 
