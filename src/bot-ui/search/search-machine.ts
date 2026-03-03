@@ -29,6 +29,8 @@ export const searchMachine = setup({
       input.useCase.execute(input.query)),
     showResult: fromPromise(({ input }: { input: { port: BotOutputPort, presenter: SearchRequestedPresenter, chatId: string } }) =>
       input.port.sendMessage(input.chatId, input.presenter.vm!.text)),
+    showError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, 'No card found with this name. Try again.')),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -59,6 +61,7 @@ export const searchMachine = setup({
         src: 'search',
         input: ({ context }) => ({ useCase: context.searchRequestedUseCase, query: context.query! }),
         onDone: 'showingResult',
+        onError: 'showingError',
       },
     },
     showingResult: {
@@ -66,6 +69,13 @@ export const searchMachine = setup({
         src: 'showResult',
         input: ({ context }) => ({ port: context.outputPort, presenter: context.searchRequestedPresenter, chatId: context.chatId }),
         onDone: 'done',
+      },
+    },
+    showingError: {
+      invoke: {
+        src: 'showError',
+        input: ({ context }) => ({ port: context.outputPort, chatId: context.chatId }),
+        onDone: 'awaitingQuery',
       },
     },
     done: { type: 'final' },
