@@ -1,5 +1,5 @@
 import type { SearchRequestedUseCase } from '@/search'
-import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine } from 'xstate'
+import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
 import { rootMachine, type RootMachineEvent } from './root/root-machine'
@@ -16,12 +16,8 @@ export class BotUI {
   ) {}
 
   start(): void {
-    this.inputPort.onCommand('search', async (context) => {
-      await this.send(context.chatId, { type: 'command', command: 'search' })
-    }, {})
-    this.inputPort.onMessage(async (context) => {
-      await this.send(context.chatId, { type: 'message', text: context.text })
-    }, {})
+    this.inputPort.onCommand('search', context => this.send(context.chatId, { type: 'command', command: 'search' }), {})
+    this.inputPort.onMessage(context => this.send(context.chatId, { type: 'message', text: context.text }), {})
   }
 
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {
@@ -37,19 +33,40 @@ export class BotUI {
     })
     actor.start()
     actor.send(event)
-    await waitFor(actor, () => !isActorSystemBusy(actor), { timeout: 30_000 })
+    await waitForSettled(actor)
     const newSnapshot = actor.getPersistedSnapshot()
     actor.stop()
     await this.storage.store(chatId, newSnapshot)
   }
 }
 
-function isActorSystemBusy(actor: AnyActorRef): boolean {
-  function isStateMachineActor(actor: AnyActorRef): actor is ActorRefFromLogic<AnyStateMachine> {
-    return 'machine' in actor.getSnapshot()
+async function waitForSettled(actor: ActorRefFromLogic<AnyStateMachine>): Promise<void> {
+  const actors = getAllSystemActors(actor)
+  if (actors.every(isStateMachine))
+    return
+  const controller = new AbortController()
+  try {
+    const signal = controller.signal
+    const snapshotChanges = actors.map((actor) => {
+      const initialSnapshot = actor.getSnapshot() as Snapshot<unknown>
+      return waitFor(actor, snapshot => snapshot !== initialSnapshot, { signal })
+    })
+    await Promise.any(snapshotChanges)
   }
-  if (!isStateMachineActor(actor))
-    return true
-  return Object.values(actor.getSnapshot().children as Record<string, AnyActorRef>)
-    .some(child => isActorSystemBusy(child))
+  finally {
+    controller.abort()
+  }
+  await waitForSettled(actor)
+}
+
+function getAllSystemActors(root: AnyActorRef): AnyActorRef[] {
+  if (isStateMachine(root)) {
+    const children = Object.values(root.getSnapshot().children as Record<string, AnyActorRef>)
+    return [root, ...children.flatMap(getAllSystemActors)]
+  }
+  return [root]
+}
+
+function isStateMachine(actor: AnyActorRef): actor is ActorRefFromLogic<AnyStateMachine> {
+  return 'value' in actor.getSnapshot()
 }
