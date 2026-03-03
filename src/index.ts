@@ -1,7 +1,8 @@
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
-import type { CardCatalog } from '@/search'
+import { SearchRequestedUseCase } from '@/search'
 import { User, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
+import { SearchRequestedPresenter } from './bot-ui/search/search-requested-presenter'
 import { InMemoryStateMachineStorage } from './bot-ui/state-machine-storage'
 import { GrammyInputPort } from './grammy/input-port'
 import { GrammyOutputPort } from './grammy/output-port'
@@ -25,11 +26,15 @@ class TestUserRepository implements UserRepository {
 
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
-const catalog: CardCatalog = new ScryfallCatalog(scryfallApis)
+const catalog = new ScryfallCatalog(scryfallApis)
+const searchRequestedPresenter = new SearchRequestedPresenter()
+const searchRequestedUseCase = new SearchRequestedUseCase(searchRequestedPresenter, catalog)
 const botUI = new BotUI(
   new InMemoryStateMachineStorage(),
   new GrammyInputPort(),
   new GrammyOutputPort(),
+  searchRequestedUseCase,
+  searchRequestedPresenter,
 )
 
 // Example usage of the CardCatalog

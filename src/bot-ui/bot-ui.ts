@@ -1,7 +1,9 @@
+import type { SearchRequestedUseCase } from '@/search'
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine } from 'xstate'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
 import { rootMachine, type RootMachineEvent } from './root/root-machine'
+import type { SearchRequestedPresenter } from './search/search-requested-presenter'
 import type { StateMachineStorage } from './state-machine-storage'
 
 export class BotUI {
@@ -9,6 +11,8 @@ export class BotUI {
     private readonly storage: StateMachineStorage,
     private readonly inputPort: BotInputPort,
     private readonly outputPort: BotOutputPort,
+    private readonly searchRequestedUseCase: SearchRequestedUseCase,
+    private readonly searchRequestedPresenter: SearchRequestedPresenter,
   ) {}
 
   start(): void {
@@ -23,7 +27,12 @@ export class BotUI {
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {
     const snapshot = await this.storage.hydrate(chatId)
     const actor = createActor(rootMachine, {
-      input: { outputPort: this.outputPort, chatId },
+      input: {
+        outputPort: this.outputPort,
+        searchRequestedUseCase: this.searchRequestedUseCase,
+        searchRequestedPresenter: this.searchRequestedPresenter,
+        chatId,
+      },
       ...(snapshot !== undefined ? { snapshot } : {}),
     })
     actor.start()

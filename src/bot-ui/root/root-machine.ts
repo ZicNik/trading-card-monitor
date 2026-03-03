@@ -1,6 +1,8 @@
+import type { SearchRequestedUseCase } from '@/search'
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
 import type { BotOutputPort } from '../bot-output'
 import { searchMachine, searchMachineId } from '../search/search-machine'
+import type { SearchRequestedPresenter } from '../search/search-requested-presenter'
 
 export type RootMachineEvent
   = | { type: 'command', command: string }
@@ -10,10 +12,14 @@ export const rootMachine = setup({
   types: {
     input: {} as {
       outputPort: BotOutputPort
+      searchRequestedUseCase: SearchRequestedUseCase
+      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
     },
     context: {} as {
       outputPort: BotOutputPort
+      searchRequestedUseCase: SearchRequestedUseCase
+      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
       activeChild?: string
     },
@@ -38,7 +44,12 @@ export const rootMachine = setup({
     searchMachine,
   },
 }).createMachine({
-  context: ({ input }) => ({ outputPort: input.outputPort, chatId: input.chatId }),
+  context: ({ input }) => ({
+    outputPort: input.outputPort,
+    searchRequestedUseCase: input.searchRequestedUseCase,
+    searchRequestedPresenter: input.searchRequestedPresenter,
+    chatId: input.chatId,
+  }),
   initial: 'idle',
   states: {
     idle: {
@@ -49,7 +60,12 @@ export const rootMachine = setup({
       invoke: {
         systemId: searchMachineId,
         src: 'searchMachine',
-        input: ({ context }) => ({ outputPort: context.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({
+          outputPort: context.outputPort,
+          searchRequestedUseCase: context.searchRequestedUseCase,
+          searchRequestedPresenter: context.searchRequestedPresenter,
+          chatId: context.chatId,
+        }),
         onDone: { target: 'idle' },
       },
     },

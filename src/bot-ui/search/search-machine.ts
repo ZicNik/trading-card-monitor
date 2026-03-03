@@ -1,14 +1,7 @@
+import type { SearchRequestedUseCase } from '@/search'
 import { assign, fromPromise, setup } from 'xstate'
 import type { BotOutputPort } from '../bot-output'
-
-type SearchResult = string
-
-const search = fromPromise(
-  async ({ input }: { input: { query: string } }): Promise<SearchResult> => {
-    await new Promise(resolve => setTimeout(resolve, 5_000))
-    return 'Search result for query: ' + input.query
-  },
-)
+import type { SearchRequestedPresenter } from './search-requested-presenter'
 
 export const searchMachineId = 'searchMachine'
 
@@ -16,32 +9,44 @@ export const searchMachine = setup({
   types: {
     input: {} as {
       outputPort: BotOutputPort
+      searchRequestedUseCase: SearchRequestedUseCase
+      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
     },
     context: {} as {
       outputPort: BotOutputPort
+      searchRequestedUseCase: SearchRequestedUseCase
+      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
       query?: string
     },
     events: {} as { type: 'message', text: string },
   },
   actors: {
-    search,
-  },
-  actions: {
-    askForQuery: ({ context }) => {
-      void context.outputPort.sendMessage(context.chatId, 'What are you looking for?')
-    },
-    showResult: ({ context }, params: SearchResult) => {
-      void context.outputPort.sendMessage(context.chatId, params)
-    },
+    askForQuery: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, 'Which card are you looking for?')),
+    search: fromPromise(({ input }: { input: { useCase: SearchRequestedUseCase, query: string } }) =>
+      input.useCase.execute(input.query)),
+    showResult: fromPromise(({ input }: { input: { port: BotOutputPort, presenter: SearchRequestedPresenter, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, input.presenter.vm!.text)),
   },
 }).createMachine({
-  context: ({ input }) => ({ outputPort: input.outputPort, chatId: input.chatId }),
-  initial: 'awaitingQuery',
+  context: ({ input }) => ({
+    outputPort: input.outputPort,
+    searchRequestedUseCase: input.searchRequestedUseCase,
+    searchRequestedPresenter: input.searchRequestedPresenter,
+    chatId: input.chatId,
+  }),
+  initial: 'askingForQuery',
   states: {
+    askingForQuery: {
+      invoke: {
+        src: 'askForQuery',
+        input: ({ context }) => ({ port: context.outputPort, chatId: context.chatId }),
+        onDone: 'awaitingQuery',
+      },
+    },
     awaitingQuery: {
-      entry: 'askForQuery',
       on: {
         message: {
           actions: assign({ query: ({ event }) => event.text }),
@@ -52,14 +57,15 @@ export const searchMachine = setup({
     searching: {
       invoke: {
         src: 'search',
-        input: ({ context }) => ({ query: context.query! }),
-        onDone: {
-          actions: {
-            type: 'showResult',
-            params: ({ event }) => event.output,
-          },
-          target: 'done',
-        },
+        input: ({ context }) => ({ useCase: context.searchRequestedUseCase, query: context.query! }),
+        onDone: 'showingResult',
+      },
+    },
+    showingResult: {
+      invoke: {
+        src: 'showResult',
+        input: ({ context }) => ({ port: context.outputPort, presenter: context.searchRequestedPresenter, chatId: context.chatId }),
+        onDone: 'done',
       },
     },
     done: { type: 'final' },
