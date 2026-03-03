@@ -58,7 +58,7 @@ const getCardCache = new Map<string, Card>()
 function toCardPrototype(card: ScryfallCard): CardPrototype {
   return {
     name: card.name,
-    imgUrl: card.image_uris.small,
+    imgUrl: card.image_uris.normal,
   }
 }
 

@@ -28,7 +28,7 @@ export const searchMachine = setup({
     search: fromPromise(({ input }: { input: { useCase: SearchRequestedUseCase, query: string } }) =>
       input.useCase.execute(input.query)),
     showResult: fromPromise(({ input }: { input: { port: BotOutputPort, presenter: SearchRequestedPresenter, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, input.presenter.vm!.text)),
+      input.port.sendMessage(input.chatId, input.presenter.vm!.text, input.presenter.vm!.options)),
     showError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'No card found with this name. Try again.')),
   },

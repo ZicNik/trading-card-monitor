@@ -1,7 +1,9 @@
 import type { SearchRequestedOutput, SearchRequestedOutputPort } from '@/search'
+import type { SendMessageOptions } from '../bot-output'
 
 export type SearchRequestedViewModel = Readonly<{
   text: string
+  options: SendMessageOptions
 }>
 
 export class SearchRequestedPresenter implements SearchRequestedOutputPort {
@@ -9,7 +11,8 @@ export class SearchRequestedPresenter implements SearchRequestedOutputPort {
 
   present(output: SearchRequestedOutput): void {
     this.vm = {
-      text: `<a href="${output.imgUrl}">${output.name}</a>`,
+      text: `[${output.name}](${output.imgUrl})`,
+      options: { formatting: 'markdown' },
     }
   }
 }
