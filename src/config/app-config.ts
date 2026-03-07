@@ -8,6 +8,7 @@ const schema = z.object({
   // Optional TLS configuration
   CERT_PATH: z.string().optional(),
   KEY_PATH: z.string().optional(),
+  REDIS_URL: z.string(),
 })
 
 export const APP_CONFIG = (() => {
@@ -32,5 +33,6 @@ export const APP_CONFIG = (() => {
     webhookDomain: data.WEBHOOK_DOMAIN,
     port: data.PORT,
     ...(tls !== undefined ? { tls } : {}),
+    redisUrl: data.REDIS_URL,
   } as const
 })()

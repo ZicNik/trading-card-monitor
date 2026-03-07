@@ -12,6 +12,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "grammy": "^1.39.3",
+    "ioredis": "^5.10.0",
     "xstate": "^5.26.0",
     "zod": "^4.3.6"
   },
@@ -31,6 +32,9 @@
     "build": "tsup",
     "clean": "rm -rf dist",
     "check": "tsc --noEmit",
-    "lint": "eslint"
+    "lint": "eslint",
+    "redis:start": "exec valkey-server --port 6380 --dbfilename .sessions.rdb --daemonize yes",
+    "redis:stop": "valkey-cli -p 6380 shutdown save",
+    "redis:status": "valkey-cli -p 6380 ping"
   }
 }
