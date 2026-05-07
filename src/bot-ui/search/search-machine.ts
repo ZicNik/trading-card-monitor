@@ -8,15 +8,9 @@ export const searchMachineId = 'searchMachine'
 export const searchMachine = setup({
   types: {
     input: {} as {
-      outputPort: BotOutputPort
-      searchRequestedUseCase: SearchRequestedUseCase
-      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
     },
     context: {} as {
-      outputPort: BotOutputPort
-      searchRequestedUseCase: SearchRequestedUseCase
-      searchRequestedPresenter: SearchRequestedPresenter
       chatId: string
       query?: string
     },
@@ -34,9 +28,6 @@ export const searchMachine = setup({
   },
 }).createMachine({
   context: ({ input }) => ({
-    outputPort: input.outputPort,
-    searchRequestedUseCase: input.searchRequestedUseCase,
-    searchRequestedPresenter: input.searchRequestedPresenter,
     chatId: input.chatId,
   }),
   initial: 'askingForQuery',
@@ -44,7 +35,7 @@ export const searchMachine = setup({
     askingForQuery: {
       invoke: {
         src: 'askForQuery',
-        input: ({ context }) => ({ port: context.outputPort, chatId: context.chatId }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
         onDone: 'awaitingQuery',
       },
     },
@@ -59,7 +50,7 @@ export const searchMachine = setup({
     searching: {
       invoke: {
         src: 'search',
-        input: ({ context }) => ({ useCase: context.searchRequestedUseCase, query: context.query! }),
+        input: ({ context, self }) => ({ useCase: self.system.env.searchRequestedUseCase, query: context.query! }),
         onDone: 'showingResult',
         onError: 'showingError',
       },
@@ -67,14 +58,14 @@ export const searchMachine = setup({
     showingResult: {
       invoke: {
         src: 'showResult',
-        input: ({ context }) => ({ port: context.outputPort, presenter: context.searchRequestedPresenter, chatId: context.chatId }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, presenter: self.system.env.searchRequestedPresenter, chatId: context.chatId }),
         onDone: 'done',
       },
     },
     showingError: {
       invoke: {
         src: 'showError',
-        input: ({ context }) => ({ port: context.outputPort, chatId: context.chatId }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
         onDone: 'awaitingQuery',
       },
     },

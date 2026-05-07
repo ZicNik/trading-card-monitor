@@ -24,14 +24,15 @@ export class BotUI {
     const searchRequestedPresenter = new SearchRequestedPresenter()
     const searchRequestedUseCase = new SearchRequestedUseCase(searchRequestedPresenter, this.cardCatalog)
     const actor = createActor(rootMachine, {
-      input: {
-        outputPort: this.outputPort,
-        searchRequestedUseCase,
-        searchRequestedPresenter,
-        chatId,
-      },
+      input: { chatId },
       ...(snapshot !== undefined ? { snapshot } : {}),
     })
+    // Initialize the actor system's environment
+    actor.system.env = {
+      outputPort: this.outputPort,
+      searchRequestedUseCase,
+      searchRequestedPresenter,
+    }
     actor.start()
     actor.send(event)
     await waitForSettled(actor)
