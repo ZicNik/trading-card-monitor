@@ -3,10 +3,9 @@
   "include": ["./src"],
   "compilerOptions": {
     // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
-    "baseUrl": "./src",
-    "paths": { "@/*": ["./*"] },
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "paths": { "@/*": ["./src/*"] },
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
@@ -43,5 +42,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+
+    "ignoreDeprecations": "6.0", // Temporary flag, so that tsup can generate declaration files without errors
   }
 }
