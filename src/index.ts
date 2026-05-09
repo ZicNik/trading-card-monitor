@@ -8,17 +8,18 @@ import { RedisStateMachineStorage } from './redis'
 class TestUserRepository implements UserRepository {
   private readonly users = new Map<string, User>()
 
-  findById(id: string): User | undefined {
+  findById(id: string): Promise<User | undefined> {
     let user = this.users.get(id)
     if (user === undefined) {
       user = new User(id)
       this.users.set(id, user)
     }
-    return user
+    return Promise.resolve(user)
   }
 
-  save(user: User) {
+  save(user: User): Promise<void> {
     this.users.set(user.id, user)
+    return Promise.resolve()
   }
 }
 

@@ -9,7 +9,9 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "grammy": "^1.39.3",
     "ioredis": "^5.10.0",
@@ -21,6 +23,7 @@
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.2",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^10.3.0",
     "globals": "^17.0.0",
     "tsup": "^8.5.1",
@@ -33,6 +36,7 @@
     "clean": "rm -rf dist",
     "check": "tsc --noEmit",
     "lint": "eslint",
+    "db:push": "drizzle-kit push --config drizzle.config.mjs",
     "redis:start": "exec valkey-server --port 6380 --dbfilename .sessions.rdb --daemonize yes",
     "redis:stop": "valkey-cli -p 6380 shutdown save",
     "redis:status": "valkey-cli -p 6380 ping"

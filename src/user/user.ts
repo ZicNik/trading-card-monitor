@@ -7,6 +7,6 @@ export class User {
 // MARK: - Repository
 
 export interface UserRepository {
-  findById(id: string): User | undefined
-  save(user: User): void
+  findById(id: string): Promise<User | undefined>
+  save(user: User): Promise<void>
 }

@@ -8,6 +8,7 @@ export default defineConfig(
   { ignores: ['dist'] },
   {
     languageOptions: {
+      globals: globals.node,
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
