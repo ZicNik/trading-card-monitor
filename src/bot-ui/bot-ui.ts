@@ -1,4 +1,5 @@
 import { SearchRequestedUseCase, type CardCatalog } from '@/search'
+import type { UserRegistrationUseCase } from '@/user'
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
@@ -11,12 +12,19 @@ export class BotUI {
     private readonly storage: StateMachineStorage,
     private readonly inputPort: BotInputPort,
     private readonly outputPort: BotOutputPort,
+    private readonly userRegistrationUseCase: UserRegistrationUseCase,
     private readonly cardCatalog: CardCatalog,
   ) {}
 
   start(): void {
+    this.inputPort.onAny(context => this.handleUserRegistration(context.userId), {})
     this.inputPort.onCommand('search', context => this.send(context.chatId, { type: 'command', command: 'search' }), {})
     this.inputPort.onMessage(context => this.send(context.chatId, { type: 'message', text: context.text }), {})
+  }
+
+  private async handleUserRegistration(id?: string): Promise<void> {
+    if (id !== undefined)
+      await this.userRegistrationUseCase.execute({ id })
   }
 
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {

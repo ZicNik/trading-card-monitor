@@ -3,6 +3,17 @@ import { GRAMMY_BOT } from './bot'
 
 /** @see {@link https://grammy.dev/guide/middleware} */
 export class GrammyInputPort implements BotInputPort {
+  onAny(
+    handler: BotInputHandler<'any'>,
+    options: { filter?: BotInputFilter<'any'> } = {},
+  ): void {
+    GRAMMY_BOT.use(async (ctx, next) => {
+      const userId = ctx.from?.id.toString()
+      await this.handle({ ...(userId !== undefined ? { userId } : {}) }, handler, options.filter)
+      await next()
+    })
+  }
+
   onCommand(
     command: string,
     handler: BotInputHandler<'command'>,

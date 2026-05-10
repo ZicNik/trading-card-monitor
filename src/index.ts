@@ -1,7 +1,8 @@
+import { DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
-import { User, type UserRepository } from '@/user'
+import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
 
 class TestUserRepository implements UserRepository {
@@ -25,10 +26,13 @@ class TestUserRepository implements UserRepository {
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const catalog = new ScryfallCatalog(scryfallApis)
+const userRepository = new DbUserRepository()
+const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
 const botUI = new BotUI(
   new RedisStateMachineStorage(),
   new GrammyInputPort(),
   new GrammyOutputPort(),
+  userRegistrationUseCase,
   catalog,
 )
 

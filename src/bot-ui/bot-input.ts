@@ -1,12 +1,16 @@
 interface BotInputContextMap {
-  command: unknown
+  any: unknown
+  command: Readonly<{
+    chatId: string
+  }>
   message: Readonly<{
+    chatId: string
     text: string
   }>
 }
 
 type BotInputBaseContext = Readonly<{
-  chatId: string
+  userId?: string
 }>
 
 export type BotInputType = keyof BotInputContextMap
@@ -23,6 +27,12 @@ export type BotInputFilter<T extends BotInputType> = (context: BotInputContext<T
  * order matters, or how multiple handlers are executed, etc.
  */
 export interface BotInputPort {
+
+  /** @param filter Handler is called only when this predicate is true. */
+  onAny(
+    handler: BotInputHandler<'any'>,
+    options: { filter?: BotInputFilter<'any'> },
+  ): void
 
   /** @param filter Handler is called only when this predicate is true. */
   onCommand(
