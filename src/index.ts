@@ -1,9 +1,8 @@
+import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
+import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { User, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
-import { GrammyInputPort } from './grammy/input-port'
-import { GrammyOutputPort } from './grammy/output-port'
-import { RedisStateMachineStorage } from './redis'
 
 class TestUserRepository implements UserRepository {
   private readonly users = new Map<string, User>()
