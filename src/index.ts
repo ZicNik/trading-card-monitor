@@ -4,6 +4,7 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
+import { CardTraderApis } from './cardtrader/apis'
 
 class TestUserRepository implements UserRepository {
   private readonly users = new Map<string, User>()
@@ -64,3 +65,23 @@ function testBotUI() {
 }
 
 testBotUI()
+
+async function testCardTraderApis() {
+  const cardTraderApis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
+  const expansions = await cardTraderApis.expansions()
+  console.log(expansions)
+  const expansionId = expansions?.[0]?.id
+  if (expansionId === undefined)
+    return
+  const blueprints = await cardTraderApis.blueprints(expansionId)
+  console.log(blueprints)
+  const expansionProducts = await cardTraderApis.marketplaceProducts(expansionId)
+  console.log(expansionProducts)
+  const blueprintId = blueprints?.[0]?.id
+  if (blueprintId === undefined)
+    return
+  const blueprintProducts = await cardTraderApis.marketplaceProducts(undefined, blueprintId)
+  console.log(blueprintProducts)
+}
+
+// testCardTraderApis().catch(console.error)

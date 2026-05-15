@@ -10,6 +10,7 @@ const schema = z.object({
   KEY_PATH: z.string().optional(),
   DB_URL: z.string(),
   REDIS_URL: z.string(),
+  CARDTRADER_TOKEN: z.string(),
 })
 
 export const APP_CONFIG = (() => {
@@ -36,5 +37,6 @@ export const APP_CONFIG = (() => {
     ...(tls !== undefined ? { tls } : {}),
     dbUrl: data.DB_URL,
     redisUrl: data.REDIS_URL,
+    cardtraderToken: data.CARDTRADER_TOKEN,
   } as const
 })()
