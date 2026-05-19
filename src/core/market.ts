@@ -11,5 +11,5 @@ export interface MarketRegistry {}
 
 export type MarketType = keyof MarketRegistry
 
-export type ListingMarketAttributes = MarketRegistry[MarketType]['listingAttributes']
-export type MonitorMarketFilters = MarketRegistry[MarketType]['monitorFilters']
+export type ListingMarketAttributes<M extends MarketType = MarketType> = MarketRegistry[M]['listingAttributes']
+export type MonitorMarketFilters<M extends MarketType = MarketType> = MarketRegistry[M]['monitorFilters']

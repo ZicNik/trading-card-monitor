@@ -1,14 +1,15 @@
 import type { CardPrinting } from './card'
-import type { MonitorMarketFilters } from './market'
+import type { MarketType, MonitorMarketFilters } from './market'
 
 /** A card to be monitored according to a set of parameters. */
 export class CardMonitor {
   constructor(
     public readonly id: number,
-    public readonly cardId: string,
     public readonly userId: string,
+    public readonly cardName: string,
     public baseFilters: MonitorBaseFilters,
-    public marketFilters: MonitorMarketFilters,
+    public targetMarkets: MarketType[],
+    public marketFilters: { [M in MarketType]: MonitorMarketFilters<M> },
   ) {}
 }
 
@@ -24,10 +25,12 @@ export type MonitorBaseFilters = Readonly<{
 
 // MARK: - Repository
 
+export type CardMonitorCreationArgs = Omit<CardMonitor, 'id'>
+
 export interface CardMonitorRepository {
   findById(id: number): Promise<CardMonitor | undefined>
   findByUserId(userId: string): Promise<CardMonitor[]>
   getAll(): Promise<CardMonitor[]>
-  save(cardMonitor: CardMonitor): Promise<void>
+  createAndSave(args: CardMonitorCreationArgs): Promise<CardMonitor>
   delete(id: number): Promise<void>
 }
