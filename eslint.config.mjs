@@ -21,6 +21,7 @@ export default defineConfig(
   stylistic.configs.recommended,
   {
     rules: {
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },

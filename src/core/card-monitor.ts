@@ -9,7 +9,7 @@ export class CardMonitor {
     public readonly cardName: string,
     public baseFilters: MonitorBaseFilters,
     public targetMarkets: MarketType[],
-    public marketFilters: { [M in MarketType]: MonitorMarketFilters<M> },
+    public marketFilters: { [M in MarketType]?: MonitorMarketFilters<M> },
   ) {}
 }
 
