@@ -1,3 +1,4 @@
+import type { Card, CardMonitorRepository } from '@/core'
 import { DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
@@ -5,6 +6,7 @@ import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
 import { CardTraderApis } from './cardtrader/apis'
+import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
 
 class TestUserRepository implements UserRepository {
   private readonly users = new Map<string, User>()
@@ -85,3 +87,45 @@ async function testCardTraderApis() {
 }
 
 // testCardTraderApis().catch(console.error)
+
+async function testCardMonitorRepository() {
+  // Make sure these users exist in the database, or the foreign key constraint will fail
+  const userId1 = '001'
+  const userId2 = '002'
+  const repo: CardMonitorRepository = new DbCardMonitorRepository()
+  const m1 = await repo.createAndSave({
+    userId: userId1,
+    cardName: 'Black Lotus',
+    targetMarkets: ['cardtrader'],
+    baseFilters: {
+      maxEuroCents: 1000,
+      printings: [
+        { setCode: 'LEA', collectorNum: '233' },
+        { setCode: 'LEB', collectorNum: '233' },
+      ],
+    },
+    marketFilters: {},
+  })
+  console.log(m1)
+  const m2 = await repo.createAndSave({
+    userId: userId2,
+    cardName: 'Lightning Bolt',
+    targetMarkets: ['cardtrader'],
+    baseFilters: {
+      maxEuroCents: 200,
+      printings: [
+        { setCode: 'LEA', collectorNum: '100' },
+        { setCode: 'LEB', collectorNum: '101' },
+      ],
+    },
+    marketFilters: {},
+  })
+  console.log(m2)
+  const user1Monitors = await repo.findByUserId(userId1)
+  console.log(user1Monitors)
+  const allMonitors = await repo.getAll()
+  console.log(allMonitors)
+  await repo.delete(m2.id)
+}
+
+// testCardMonitorRepository().catch(console.error)
