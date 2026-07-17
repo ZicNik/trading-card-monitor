@@ -13,6 +13,7 @@ export class ScryfallApis {
   constructor(config?: ScryfallApisConfig) {
     this.http = new HttpClient(createClientConfig({
       baseUrl: 'https://api.scryfall.com',
+      defaultHeaders: { 'User-Agent': 'Trading Card Monitor' },
       ...(config?.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
       ...(config?.retries !== undefined ? { retries: config.retries } : {}),
     }))
