@@ -63,7 +63,7 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
       .values(createToInsert(args)).returning({ id: cardMonitorsTable.id }))[0]?.id
     if (id === undefined)
       throw new Error('Failed to insert card monitor') // This should never happen
-    if (args.baseFilters.printings !== undefined && args.baseFilters.printings.length > 0) {
+    if (args.baseFilters.printings.length > 0) {
       await DRIZZLE_DB.insert(monitoredPrintingsTable)
         .values(monitoredPrintingsToInsert(id, args.baseFilters.printings))
     }
@@ -104,15 +104,11 @@ function selectToCardMonitor(
     monitor.card_name,
     {
       maxEuroCents: monitor.max_euro_cents,
+      printings: printings.map(p => ({
+        setCode: p.set_code,
+        collectorNum: p.coll_num,
+      })),
       ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
-      ...(printings.length > 0
-        ? {
-            printings: printings.map(p => ({
-              setCode: p.set_code,
-              collectorNum: p.coll_num,
-            })),
-          }
-        : {}),
     },
     targetMarkets,
     {
