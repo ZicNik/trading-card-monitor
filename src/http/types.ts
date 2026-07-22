@@ -22,4 +22,10 @@ export type ClientConfig = Readonly<{
   defaultHeaders: Headers
   timeoutMs?: number
   retries: number
+  throttling?: ThrottlingConfig
+}>
+
+export type ThrottlingConfig = Readonly<{
+  tokensPerInterval: number
+  intervalMs: number
 }>

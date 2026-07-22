@@ -1,10 +1,20 @@
+import { RateLimiter } from 'limiter'
 import { ApiError, TimeoutError } from './errors'
 import type { ClientConfig, Headers, Request, RequestOptions } from './types'
 import { createClientConfig } from './utils'
 
 /** Client for RESTful APIs. */
 export class HttpClient {
-  public constructor(private readonly config: ClientConfig = createClientConfig()) {}
+  private readonly limiter?: RateLimiter
+
+  public constructor(private readonly config: ClientConfig = createClientConfig()) {
+    if (config.throttling !== undefined) {
+      this.limiter = new RateLimiter({
+        tokensPerInterval: config.throttling.tokensPerInterval,
+        interval: config.throttling.intervalMs,
+      })
+    }
+  }
 
   public async perform<ReqBody, ResBody = unknown>(req: Request<ReqBody>, opts: RequestOptions = {}): Promise<ResBody | undefined> {
     const method = req.method
@@ -32,6 +42,7 @@ export class HttpClient {
         ? undefined
         : setTimeout(() => { controller.abort() }, timeoutMs)
       try {
+        await this.limiter?.removeTokens(1)
         const resp = await fetch(url, {
           method,
           headers,
