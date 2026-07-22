@@ -17,6 +17,7 @@ export class CardTraderApis {
       defaultHeaders: { Authorization: `Bearer ${APP_CONFIG.cardtraderToken}` },
       ...(config?.timeoutMs !== undefined ? { timeoutMs: config.timeoutMs } : {}),
       ...(config?.retries !== undefined ? { retries: config.retries } : {}),
+      throttling: { tokensPerInterval: 100, intervalMs: 5000 },
     }))
   }
 
