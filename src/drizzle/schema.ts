@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 export const usersTable = sqliteTable('users', {
   id: text().primaryKey(),
@@ -25,3 +25,18 @@ export const cardtraderMonitorFiltersTable = sqliteTable('cardtrader_monitor_fil
     .references(() => cardMonitorsTable.id, { onDelete: 'cascade' }),
   ct_zero: integer(),
 })
+
+export const cardtraderSetsTable = sqliteTable('cardtrader_sets', {
+  id: integer().primaryKey(),
+  code: text().notNull(),
+  name: text().notNull(),
+})
+
+export const cardtraderBlueprintsTable = sqliteTable('cardtrader_blueprints', {
+  id: integer().primaryKey(),
+  name: text().notNull(),
+  expansion_id: integer().notNull().references(() => cardtraderSetsTable.id),
+  coll_num: text().notNull(),
+}, table => [
+  index('name_idx').on(table.name)
+])
