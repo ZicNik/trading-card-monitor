@@ -46,6 +46,7 @@ export const CT_LANGUAGES = {
 /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#expansions} */
 export type CardTraderExpansion = Readonly<{
   id: number
+  game_id: number
   code: string
   name: string
 }>

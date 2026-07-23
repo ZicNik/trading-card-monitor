@@ -1,6 +1,6 @@
 import { APP_CONFIG } from '@/config/app-config'
 import { createClientConfig, createRequest, HttpClient } from '@/http'
-import type { CardTraderBlueprint, CardTraderExpansion, CardTraderLanguage, CardTraderProduct } from './types'
+import { CT_MTG_GAME_ID, type CardTraderBlueprint, type CardTraderExpansion, type CardTraderLanguage, type CardTraderProduct } from './types'
 
 export type CardTraderApisConfig = Partial<Readonly<{
   timeoutMs: number
@@ -23,7 +23,8 @@ export class CardTraderApis {
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#expansions} */
   async expansions(): Promise<CardTraderExpansion[] | undefined> {
-    return await this.http.perform(createRequest({ path: '/expansions' }))
+    return (await this.http.perform<undefined, CardTraderExpansion[]>(createRequest({ path: '/expansions' })))
+      ?.filter(e => e.game_id === CT_MTG_GAME_ID)
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#blueprints} */
