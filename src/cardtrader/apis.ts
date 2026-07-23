@@ -1,6 +1,6 @@
 import { APP_CONFIG } from '@/config/app-config'
 import { createClientConfig, createRequest, HttpClient } from '@/http'
-import type { CardTraderBlueprint, CardTraderExpansion, CardTraderProduct } from './types'
+import type { CardTraderBlueprint, CardTraderExpansion, CardTraderLanguage, CardTraderProduct } from './types'
 
 export type CardTraderApisConfig = Partial<Readonly<{
   timeoutMs: number
@@ -35,13 +35,16 @@ export class CardTraderApis {
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#marketplace-products} */
-  async marketplaceProducts(expansion_id?: number, blueprint_id?: number): Promise<CardTraderProduct[] | undefined> {
-    return await this.http.perform(createRequest({
-      path: '/marketplace/products',
-      params: {
-        ...(expansion_id !== undefined ? { expansion_id } : {}),
-        ...(blueprint_id !== undefined ? { blueprint_id } : {}),
-      },
-    }))
+  async marketplaceProducts(params: MarketplaceProductsParams): Promise<CardTraderProduct[] | undefined> {
+    return await this.http.perform(createRequest({ path: '/marketplace/products', params }))
   }
 }
+
+// MARK: - Parameter Types
+
+type MarketplaceProductsParams = Readonly<(
+  { expansion_id: number } | { blueprint_id: number }
+) & {
+  foil?: boolean
+  language?: CardTraderLanguage
+}>
