@@ -55,6 +55,9 @@ export type CardTraderBlueprint = Readonly<{
   id: number
   name: string
   expansion_id: number
+  fixed_properties: Readonly<{
+    collector_number: string
+  }>,
 }>
 
 /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#marketplace-products} */
