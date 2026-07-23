@@ -6,6 +6,7 @@ import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
 import { CardTraderApis } from './cardtrader/apis'
+import { CardTraderDbSynchronizer } from './cardtrader/db-synchronizer'
 import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
 
 class TestUserRepository implements UserRepository {
@@ -129,3 +130,11 @@ async function testCardMonitorRepository() {
 }
 
 // testCardMonitorRepository().catch(console.error)
+
+async function testCardTraderDbSynchronizer() {
+  const apis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
+  const synchronizer = new CardTraderDbSynchronizer(apis)
+  await synchronizer.syncSetsAndBlueprints()
+}
+
+// testCardTraderDbSynchronizer().catch(console.error)
