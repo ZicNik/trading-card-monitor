@@ -25,6 +25,7 @@ export class CardTraderDbSynchronizer {
         set: { code: sql`EXCLUDED.code`, name: sql`EXCLUDED.name` },
       })
     const blueprintInserts = blueprints.map(cardTraderBlueprintToInsertBlueprint)
+      .filter((b): b is InsertBlueprint => b !== undefined)
     // Batch inserts into chunks to prevent limit errors
     const batchSize = 1000;
     for (let i = 0; i < blueprintInserts.length; i += batchSize) {
@@ -51,11 +52,12 @@ function cardTraderExpansionToInsertSet(expansion: CardTraderExpansion): InsertS
   }
 }
 
-function cardTraderBlueprintToInsertBlueprint(blueprint: CardTraderBlueprint): InsertBlueprint {
-  return {
-    id: blueprint.id,
-    name: blueprint.name,
-    expansion_id: blueprint.expansion_id,
-    coll_num: blueprint.fixed_properties.collector_number,
-  }
+function cardTraderBlueprintToInsertBlueprint(blueprint: CardTraderBlueprint): InsertBlueprint | undefined {
+  // Avoid mapping blueprints that do not correspond to physical cards (e.g. tokens, emblems, etc.)
+  return typeof blueprint.fixed_properties.collector_number === 'string' ? {
+      id: blueprint.id,
+      name: blueprint.name,
+      expansion_id: blueprint.expansion_id,
+      coll_num: blueprint.fixed_properties.collector_number,
+    } : undefined
 }

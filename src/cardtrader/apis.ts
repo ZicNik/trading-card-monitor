@@ -30,7 +30,7 @@ export class CardTraderApis {
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#blueprints} */
   async blueprints(expansion_id: number): Promise<CardTraderBlueprint[] | undefined> {
     return await this.http.perform(createRequest({
-      path: '/blueprints',
+      path: '/blueprints/export',
       params: { expansion_id },
     }))
   }

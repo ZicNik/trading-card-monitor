@@ -57,7 +57,7 @@ export type CardTraderBlueprint = Readonly<{
   name: string
   expansion_id: number
   fixed_properties: Readonly<{
-    collector_number: string
+    collector_number?: string
   }>,
 }>
 
