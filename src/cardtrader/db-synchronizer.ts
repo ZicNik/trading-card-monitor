@@ -4,19 +4,42 @@ import { sql } from 'drizzle-orm'
 import type { CardTraderApis } from "./apis"
 import type { CardTraderBlueprint, CardTraderExpansion } from './types'
 
+/** @see {@link SYNCHRONIZER_DEFAULTS} */
+export type CardTraderDbSynchronizerConfig = Readonly<{
+  httpBatchSize: number
+  dbBatchSize: number
+}>
+
+export const SYNCHRONIZER_DEFAULTS = {
+  httpBatchSize: 25,
+  dbBatchSize: 250,
+} as const
+
 /** Synchronizes data from CardTrader to the application database. */
 export class CardTraderDbSynchronizer {
-  constructor(private readonly apis: CardTraderApis) {}
+  private readonly apis: CardTraderApis
+  private readonly config: CardTraderDbSynchronizerConfig
+
+  constructor(args: {
+    apis: CardTraderApis,
+    config?: Partial<CardTraderDbSynchronizerConfig>
+  }) {
+    this.apis = args.apis
+    this.config = { ...SYNCHRONIZER_DEFAULTS, ...args.config }
+  }
 
   /** Loads or updates the application's set and blueprint tables with the latest data from CardTrader. */
   async syncSetsAndBlueprints(): Promise<void> {
     const expansions = await this.apis.expansions()
     if (expansions === undefined || expansions.length === 0)
       return
-    const blueprints = (await Promise.allSettled(expansions.map(e => this.apis.blueprints(e.id))))
-      .filter((r): r is PromiseFulfilledResult<CardTraderBlueprint[]> =>
-        r.status === 'fulfilled' && r.value !== undefined)
-      .flatMap(r => r.value)
+    const blueprints: CardTraderBlueprint[] = []
+    await this.performBatched(expansions, this.config.httpBatchSize, async (batch) => {
+      blueprints.push(...(await Promise.allSettled(batch.map(e => this.apis.blueprints(e.id))))
+        .filter((r): r is PromiseFulfilledResult<CardTraderBlueprint[]> =>
+          r.status === 'fulfilled' && r.value !== undefined)
+        .flatMap(r => r.value))
+    })
     const setInserts = expansions.map(cardTraderExpansionToInsertSet)
     await DRIZZLE_DB.insert(cardtraderSetsTable)
       .values(setInserts)
@@ -26,13 +49,17 @@ export class CardTraderDbSynchronizer {
       })
     const blueprintInserts = blueprints.map(cardTraderBlueprintToInsertBlueprint)
       .filter((b): b is InsertBlueprint => b !== undefined)
-    // Batch inserts into chunks to prevent limit errors
-    const batchSize = 1000;
-    for (let i = 0; i < blueprintInserts.length; i += batchSize) {
-      const batch = blueprintInserts.slice(i, i + batchSize)
+    await this.performBatched(blueprintInserts, this.config.dbBatchSize, async (batch) => {
       await DRIZZLE_DB.insert(cardtraderBlueprintsTable)
         .values(batch)
         .onConflictDoNothing()
+    })
+  }
+
+  private async performBatched<T>(items: T[], batchSize: number, callbackfn: (batch: T[]) => Promise<void>): Promise<void> {
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize)
+      await callbackfn(batch)
     }
   }
 }

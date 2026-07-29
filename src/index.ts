@@ -67,7 +67,7 @@ function testBotUI() {
   botUI.start()
 }
 
-testBotUI()
+// testBotUI()
 
 async function testCardTraderApis() {
   const cardTraderApis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
@@ -132,8 +132,8 @@ async function testCardMonitorRepository() {
 // testCardMonitorRepository().catch(console.error)
 
 async function testCardTraderDbSynchronizer() {
-  const apis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
-  const synchronizer = new CardTraderDbSynchronizer(apis)
+  const apis = new CardTraderApis()
+  const synchronizer = new CardTraderDbSynchronizer({ apis })
   await synchronizer.syncSetsAndBlueprints()
 }
 
