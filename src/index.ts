@@ -5,6 +5,7 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
+import { CardTraderListingCatalog } from './cardtrader'
 import { CardTraderApis } from './cardtrader/apis'
 import { CardTraderDbSynchronizer } from './cardtrader/db-synchronizer'
 import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
@@ -131,10 +132,13 @@ async function testCardMonitorRepository() {
 
 // testCardMonitorRepository().catch(console.error)
 
-async function testCardTraderDbSynchronizer() {
+async function testCardTraderListingCatalog() {
   const apis = new CardTraderApis()
   const synchronizer = new CardTraderDbSynchronizer({ apis })
+  const catalog = new CardTraderListingCatalog(apis)
   await synchronizer.syncSetsAndBlueprints()
+  const listings = await catalog.findByCardName('Moonshadow')
+  console.log(listings)
 }
 
-// testCardTraderDbSynchronizer().catch(console.error)
+// testCardTraderListingCatalog().catch(console.error)

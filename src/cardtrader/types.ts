@@ -83,6 +83,7 @@ export type CardTraderProduct = Readonly<{
   user: Readonly<{
     username: string
     country_code: string
+    can_sell_via_hub: boolean
   }>
 }>
 
