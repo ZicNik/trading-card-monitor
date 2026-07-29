@@ -43,7 +43,7 @@ export class CardTraderApis {
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#marketplace-products} */
-  async marketplaceProducts(params: MarketplaceProductsParams): Promise<CardTraderProduct[] | undefined> {
+  async marketplaceProducts(params: MarketplaceProductsParams): Promise<Record<number, CardTraderProduct[]> | undefined> {
     return await this.http.perform(createRequest({ path: '/marketplace/products', params }))
   }
 }
