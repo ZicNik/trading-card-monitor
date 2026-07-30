@@ -38,5 +38,5 @@ export const cardtraderBlueprintsTable = sqliteTable('cardtrader_blueprints', {
   expansion_id: integer().notNull().references(() => cardtraderSetsTable.id),
   coll_num: text().notNull(),
 }, table => [
-  index('name_idx').on(table.name)
+  index('name_idx').on(table.name),
 ])

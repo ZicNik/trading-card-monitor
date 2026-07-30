@@ -24,7 +24,7 @@ export class CardTraderApis {
       baseUrl: 'https://api.cardtrader.com/api/v2',
       defaultHeaders: { Authorization: `Bearer ${APP_CONFIG.cardtraderToken}` },
       ...APIS_DEFAULTS,
-      ...config
+      ...config,
     }))
   }
 

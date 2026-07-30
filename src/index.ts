@@ -1,32 +1,32 @@
-import type { Card, CardMonitorRepository } from '@/core'
+import type { CardMonitorRepository } from '@/core'
 import { DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
-import { User, UserRegistrationUseCase, type UserRepository } from '@/user'
+import { UserRegistrationUseCase } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
 import { CardTraderListingCatalog } from './cardtrader'
 import { CardTraderApis } from './cardtrader/apis'
 import { CardTraderDbSynchronizer } from './cardtrader/db-synchronizer'
 import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
 
-class TestUserRepository implements UserRepository {
-  private readonly users = new Map<string, User>()
+// class TestUserRepository implements UserRepository {
+//   private readonly users = new Map<string, User>()
 
-  findById(id: string): Promise<User | undefined> {
-    let user = this.users.get(id)
-    if (user === undefined) {
-      user = new User(id)
-      this.users.set(id, user)
-    }
-    return Promise.resolve(user)
-  }
+//   findById(id: string): Promise<User | undefined> {
+//     let user = this.users.get(id)
+//     if (user === undefined) {
+//       user = new User(id)
+//       this.users.set(id, user)
+//     }
+//     return Promise.resolve(user)
+//   }
 
-  save(user: User): Promise<void> {
-    this.users.set(user.id, user)
-    return Promise.resolve()
-  }
-}
+//   save(user: User): Promise<void> {
+//     this.users.set(user.id, user)
+//     return Promise.resolve()
+//   }
+// }
 
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
@@ -79,7 +79,7 @@ async function testCardTraderApis() {
     return
   const blueprints = await cardTraderApis.blueprints(expansionId)
   console.log(blueprints)
-  const expansionProducts = await cardTraderApis.marketplaceProducts({ expansion_id: expansionId})
+  const expansionProducts = await cardTraderApis.marketplaceProducts({ expansion_id: expansionId })
   console.log(expansionProducts)
   const blueprintId = blueprints?.[0]?.id
   if (blueprintId === undefined)

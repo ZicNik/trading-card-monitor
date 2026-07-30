@@ -59,13 +59,13 @@ export function createClientConfig(cfg: Partial<ClientConfig> = {}): ClientConfi
     defaultHeaders = CLIENT_CONFIG_DEFAULTS.defaultHeaders,
     timeoutMs,
     retries = CLIENT_CONFIG_DEFAULTS.retries,
-    throttling
+    throttling,
   } = cfg
   return {
     ...(baseUrl === undefined ? {} : { baseUrl }),
     defaultHeaders,
     ...(timeoutMs === undefined ? {} : { timeoutMs }),
     retries,
-    ...(throttling === undefined ? {} : { throttling })
+    ...(throttling === undefined ? {} : { throttling }),
   }
 }

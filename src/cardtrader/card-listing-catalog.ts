@@ -1,18 +1,18 @@
-import { CardListing, type CardListingCatalog } from "@/core"
-import { DRIZZLE_DB } from "@/drizzle/db"
-import { cardtraderBlueprintsTable } from "@/drizzle/schema"
+import { CardListing, type CardListingCatalog } from '@/core'
+import { DRIZZLE_DB } from '@/drizzle/db'
+import { cardtraderBlueprintsTable } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
-import type { CardTraderApis } from "./apis"
-import type { CardTraderProduct } from "./types"
+import type { CardTraderApis } from './apis'
+import type { CardTraderProduct } from './types'
 
 export class CardTraderListingCatalog implements CardListingCatalog {
   constructor(private readonly apis: CardTraderApis) {}
-  
+
   async findByCardName(name: string): Promise<CardListing[]> {
     const blueprints = await DRIZZLE_DB.select()
       .from(cardtraderBlueprintsTable)
       .where(eq(cardtraderBlueprintsTable.name, name))
-    return (await Promise.all(blueprints.map(async (b) => [b.id, await this.apis.marketplaceProducts({ blueprint_id: b.id })] as const )))
+    return (await Promise.all(blueprints.map(async b => [b.id, await this.apis.marketplaceProducts({ blueprint_id: b.id })] as const)))
       .flatMap(([id, products]) => products?.[id]?.map(toCardListing) ?? [])
   }
 }
@@ -28,12 +28,12 @@ function toCardListing(product: CardTraderProduct): CardListing {
       foil: product.properties_hash.mtg_foil,
       printing: {
         setCode: product.expansion.code,
-        collectorNum: product.properties_hash.collector_number
+        collectorNum: product.properties_hash.collector_number,
       },
     },
     {
       market: 'cardtrader',
       ctZero: product.user.can_sell_via_hub,
-    }
+    },
   )
 }

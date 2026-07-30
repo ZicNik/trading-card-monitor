@@ -1,7 +1,7 @@
 import { DRIZZLE_DB } from '@/drizzle/db'
 import { cardtraderBlueprintsTable, cardtraderSetsTable } from '@/drizzle/schema'
 import { sql } from 'drizzle-orm'
-import type { CardTraderApis } from "./apis"
+import type { CardTraderApis } from './apis'
 import type { CardTraderBlueprint, CardTraderExpansion } from './types'
 
 /** @see {@link SYNCHRONIZER_DEFAULTS} */
@@ -21,7 +21,7 @@ export class CardTraderDbSynchronizer {
   private readonly config: CardTraderDbSynchronizerConfig
 
   constructor(args: {
-    apis: CardTraderApis,
+    apis: CardTraderApis
     config?: Partial<CardTraderDbSynchronizerConfig>
   }) {
     this.apis = args.apis
@@ -81,10 +81,12 @@ function cardTraderExpansionToInsertSet(expansion: CardTraderExpansion): InsertS
 
 function cardTraderBlueprintToInsertBlueprint(blueprint: CardTraderBlueprint): InsertBlueprint | undefined {
   // Avoid mapping blueprints that do not correspond to physical cards (e.g. tokens, emblems, etc.)
-  return typeof blueprint.fixed_properties.collector_number === 'string' ? {
-      id: blueprint.id,
-      name: blueprint.name,
-      expansion_id: blueprint.expansion_id,
-      coll_num: blueprint.fixed_properties.collector_number,
-    } : undefined
+  return typeof blueprint.fixed_properties.collector_number === 'string'
+    ? {
+        id: blueprint.id,
+        name: blueprint.name,
+        expansion_id: blueprint.expansion_id,
+        coll_num: blueprint.fixed_properties.collector_number,
+      }
+    : undefined
 }
