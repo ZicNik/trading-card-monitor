@@ -98,7 +98,6 @@ async function testCardMonitorRepository() {
   const m1 = await repo.createAndSave({
     userId: userId1,
     cardName: 'Black Lotus',
-    targetMarkets: ['cardtrader'],
     baseFilters: {
       maxEuroCents: 1000,
       printings: [
@@ -106,13 +105,12 @@ async function testCardMonitorRepository() {
         { setCode: 'LEB', collectorNum: '233' },
       ],
     },
-    marketFilters: {},
+    marketFilters: { market: 'cardtrader' },
   })
   console.log(m1)
   const m2 = await repo.createAndSave({
     userId: userId2,
     cardName: 'Lightning Bolt',
-    targetMarkets: ['cardtrader'],
     baseFilters: {
       maxEuroCents: 200,
       printings: [
@@ -120,7 +118,7 @@ async function testCardMonitorRepository() {
         { setCode: 'LEB', collectorNum: '101' },
       ],
     },
-    marketFilters: {},
+    marketFilters: { market: 'cardtrader' },
   })
   console.log(m2)
   const user1Monitors = await repo.findByUserId(userId1)

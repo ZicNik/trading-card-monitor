@@ -8,7 +8,7 @@ import type { CardTraderProduct } from './types'
 export class CardTraderListingCatalog implements CardListingCatalog {
   constructor(private readonly apis: CardTraderApis) {}
 
-  async findByCardName(name: string): Promise<CardListing[]> {
+  async findByCardName(name: string): Promise<CardListing<'cardtrader'>[]> {
     const blueprints = await DRIZZLE_DB.select()
       .from(cardtraderBlueprintsTable)
       .where(eq(cardtraderBlueprintsTable.name, name))

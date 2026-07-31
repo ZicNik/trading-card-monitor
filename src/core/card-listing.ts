@@ -1,12 +1,12 @@
 import type { CardPrinting } from './card'
-import type { ListingMarketAttributes } from './market'
+import type { ListingMarketAttributes, MarketType } from './market'
 
-export class CardListing {
+export class CardListing<M extends MarketType = MarketType> {
   constructor(
     public readonly id: number,
     public readonly cardId: string,
     public baseAttributes: ListingBaseAttributes,
-    public marketDetails: ListingMarketAttributes,
+    public marketDetails: ListingMarketAttributes<M>,
   ) {}
 }
 
