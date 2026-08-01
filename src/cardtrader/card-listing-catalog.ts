@@ -19,7 +19,7 @@ export class CardTraderListingCatalog implements CardListingCatalog {
 
 // MARK: - Mappers
 
-function toCardListing(product: CardTraderProduct): CardListing {
+function toCardListing(product: CardTraderProduct): CardListing<'cardtrader'> {
   return new CardListing(
     product.id,
     product.blueprint_id.toString(),
