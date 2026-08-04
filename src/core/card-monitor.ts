@@ -1,4 +1,5 @@
 import type { CardPrinting } from './card'
+import type { CardListing } from './card-listing'
 import type { MarketType, MonitorMarketFilters } from './market'
 
 /** A card to be monitored according to a set of parameters. */
@@ -10,6 +11,20 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public baseFilters: MonitorBaseFilters,
     public marketFilters: MonitorMarketFilters<M>,
   ) {}
+
+  match(listings: CardListing[], marketMatcher: MarketFiltersMatcher): CardMonitorMatch[] {
+    return listings
+      .filter(listing => listing.marketDetails.market === this.marketFilters.market
+        && this.matchBase(listing)
+        && marketMatcher.match(listing, this.marketFilters))
+      .map(listing => ({ monitorId: this.id, listingId: listing.id }))
+  }
+
+  private readonly matchBase = (listing: CardListing): boolean => {
+    return this.baseFilters.printings.includes(listing.baseAttributes.printing) // fix to use memberwise equality
+      && listing.baseAttributes.euroCents <= this.baseFilters.maxEuroCents
+      && (this.baseFilters.foil === undefined || listing.baseAttributes.foil === this.baseFilters.foil)
+  }
 }
 
 /** Base filtering parameters. Listings that **don't** match them will be ignored. */
@@ -22,9 +37,37 @@ export type MonitorBaseFilters = Readonly<{
   // sellerCountry?: string
 }>
 
+export type CardMonitorMatch = Readonly<{
+  monitorId: number
+  listingId: number
+}>
+
+// MARK: - Market Filters Evaluator
+
+/** Evaluates if a listing matches some market filters, for a concrete market. */
+export interface SingleMarketFiltersMatcher<M extends MarketType> {
+  match(listing: CardListing<M>, filters: MonitorMarketFilters<M>): boolean
+}
+
+type MatchersMap = { [M in MarketType]: SingleMarketFiltersMatcher<M> }
+
+/** Evaluates if a listing matches some market filters, for all markets. */
+export class MarketFiltersMatcher {
+  constructor(private readonly matchers: MatchersMap) {}
+
+  match<M extends MarketType>(listing: CardListing<M>, filters: MonitorMarketFilters<M>): boolean {
+    return (this.matchers[filters.market] as SingleMarketFiltersMatcher<M>).match(listing, filters)
+  }
+}
+
 // MARK: - Repository
 
-export type CardMonitorCreationArgs<T extends MarketType = MarketType> = Omit<CardMonitor<T>, 'id'>
+export type CardMonitorCreationArgs<M extends MarketType = MarketType> = Readonly<{
+  userId: string
+  cardName: string
+  baseFilters: MonitorBaseFilters
+  marketFilters: MonitorMarketFilters<M>
+}>
 
 export interface CardMonitorRepository {
   findById(id: number): Promise<CardMonitor | undefined>

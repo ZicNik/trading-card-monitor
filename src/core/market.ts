@@ -7,7 +7,18 @@
  * @see {@link https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation}.
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface MarketRegistry {}
+export interface MarketRegistry {
+  // test: {
+  //   listingAttributes: Readonly<{
+  //     market: 'test'
+  //     testAttribute: boolean
+  //   }>
+  //   monitorFilters: Readonly<{
+  //     market: 'test'
+  //     testFilter?: boolean
+  //   }>
+  // }
+}
 
 export type MarketType = keyof MarketRegistry
 
