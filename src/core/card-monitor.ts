@@ -1,4 +1,4 @@
-import type { CardPrinting } from './card'
+import { CardPrinting } from './card'
 import type { CardListing } from './card-listing'
 import type { MarketType, MonitorMarketFilters } from './market'
 
@@ -14,6 +14,7 @@ export class CardMonitor<M extends MarketType = MarketType> {
 
   match(listings: CardListing[], marketMatcher: MarketFiltersMatcher): CardMonitorMatch[] {
     return listings
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       .filter(listing => listing.marketDetails.market === this.marketFilters.market
         && this.matchBase(listing)
         && marketMatcher.match(listing, this.marketFilters))
@@ -21,7 +22,7 @@ export class CardMonitor<M extends MarketType = MarketType> {
   }
 
   private readonly matchBase = (listing: CardListing): boolean => {
-    return this.baseFilters.printings.includes(listing.baseAttributes.printing) // fix to use memberwise equality
+    return this.baseFilters.printings.some(p => CardPrinting.equals(p, listing.baseAttributes.printing))
       && listing.baseAttributes.euroCents <= this.baseFilters.maxEuroCents
       && (this.baseFilters.foil === undefined || listing.baseAttributes.foil === this.baseFilters.foil)
   }
