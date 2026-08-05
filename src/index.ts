@@ -1,11 +1,11 @@
-import type { CardMonitorRepository } from '@/core'
+import { CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
 import { DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { UserRegistrationUseCase } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
-import { CardTraderListingCatalog } from './cardtrader'
+import { CardTraderFiltersMatcher, CardTraderListingCatalog } from './cardtrader'
 import { CardTraderApis } from './cardtrader/apis'
 import { CardTraderDbSynchronizer } from './cardtrader/db-synchronizer'
 import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
@@ -140,3 +140,51 @@ async function testCardTraderListingCatalog() {
 }
 
 // testCardTraderListingCatalog().catch(console.error)
+
+function testCardMonitorMatches() {
+  const monitor = new CardMonitor(
+    0,
+    'user1',
+    'Black Lotus',
+    {
+      maxEuroCents: 1000,
+      printings: [
+        { setCode: 'LEA', collectorNum: '233' },
+        { setCode: 'LEB', collectorNum: '233' },
+      ],
+    },
+    {
+      market: 'cardtrader',
+      ctZero: true,
+    },
+  )
+  const l1 = new CardListing(1, 'Black Lotus',
+    {
+      euroCents: 1500,
+      foil: false,
+      printing: { setCode: 'LEA', collectorNum: '233' },
+    },
+    { market: 'cardtrader', ctZero: true },
+  )
+  const l2 = new CardListing(2, 'Lightning Bolt',
+    {
+      euroCents: 1,
+      foil: true,
+      printing: { setCode: 'LEA', collectorNum: '100' },
+    },
+    { market: 'cardtrader', ctZero: true },
+  )
+  const l3 = new CardListing(3, 'Black Lotus',
+    {
+      euroCents: 1000,
+      foil: false,
+      printing: { setCode: 'LEB', collectorNum: '233' },
+    },
+    { market: 'cardtrader', ctZero: true },
+  )
+  const matcher = new MarketFiltersMatcher({ cardtrader: new CardTraderFiltersMatcher() })
+  const matches = monitor.match([l1, l2, l3], matcher)
+  console.log(matches)
+}
+
+// testCardMonitorMatches()
