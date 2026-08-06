@@ -1,4 +1,5 @@
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
+import { addMonitorMachine, addMonitorMachineId } from '../add-monitor/add-monitor-machine'
 import { searchMachine, searchMachineId } from '../search/search-machine'
 
 export type RootMachineEvent
@@ -18,6 +19,7 @@ export const rootMachine = setup({
   },
   guards: {
     isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',
+    isAddMonitorCommand: ({ event }) => event.type === 'command' && event.command === 'monitor',
     hasActiveChild: ({ context }) => context.activeChild !== undefined,
   },
   actions: {
@@ -33,6 +35,7 @@ export const rootMachine = setup({
   },
   actors: {
     searchMachine,
+    addMonitorMachine,
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
@@ -50,12 +53,24 @@ export const rootMachine = setup({
         onDone: { target: 'idle' },
       },
     },
+    addMonitor: {
+      entry: assign({ activeChild: () => addMonitorMachineId }),
+      invoke: {
+        systemId: addMonitorMachineId,
+        src: 'addMonitorMachine',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: { target: 'idle' },
+      },
+    },
   },
   on: {
-    command: {
+    command: [{
       guard: 'isSearchCommand',
       target: '.search',
-    },
+    }, {
+      guard: 'isAddMonitorCommand',
+      target: '.addMonitor',
+    }],
     message: {
       guard: 'hasActiveChild',
       actions: 'forwardToActiveChild',

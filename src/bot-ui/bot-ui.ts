@@ -19,6 +19,7 @@ export class BotUI {
   start(): void {
     this.inputPort.onAny(context => this.handleUserRegistration(context.userId), {})
     this.inputPort.onCommand('search', context => this.send(context.chatId, { type: 'command', command: 'search' }), {})
+    this.inputPort.onCommand('monitor', context => this.send(context.chatId, { type: 'command', command: 'monitor' }), {})
     this.inputPort.onMessage(context => this.send(context.chatId, { type: 'message', text: context.text }), {})
   }
 
