@@ -12,7 +12,9 @@ export const addMonitorMachine = setup({
       chatId: string
       activeChild?: string
     },
-    events: {} as { type: 'message', text: string },
+    events: {} as
+    | { type: 'message', text: string }
+    | { type: 'buttonPress', payload: string },
   },
   guards: {
     hasActiveChild: ({ context }) => context.activeChild !== undefined,
@@ -51,6 +53,10 @@ export const addMonitorMachine = setup({
   },
   on: {
     message: {
+      guard: 'hasActiveChild',
+      actions: 'forwardToActiveChild',
+    },
+    buttonPress: {
       guard: 'hasActiveChild',
       actions: 'forwardToActiveChild',
     },

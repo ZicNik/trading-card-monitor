@@ -12,7 +12,9 @@ export const addCardTraderMonitorMachine = setup({
       chatId: string
       cardName?: string
     },
-    events: {} as { type: 'message', text: string },
+    events: {} as
+    | { type: 'message', text: string }
+    | { type: 'buttonPress', payload: string },
   },
   actors: {
     askForCardName: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
@@ -40,9 +42,9 @@ export const addCardTraderMonitorMachine = setup({
       },
     },
     fetchingPrintings: {},
-    showingPrintings: {},
     askingForPrintingsSelection: {},
     awaitingForPrintingsSelection: {},
+    updatingPrintingsSelection: {},
     askingForMaxPrice: {},
     awaitingForMaxPrice: {},
     askingForFoil: {},

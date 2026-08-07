@@ -5,6 +5,7 @@ import { searchMachine, searchMachineId } from '../search/search-machine'
 export type RootMachineEvent
   = | { type: 'command', command: string }
     | { type: 'message', text: string }
+    | { type: 'buttonPress', payload: string }
 
 export const rootMachine = setup({
   types: {
@@ -72,6 +73,10 @@ export const rootMachine = setup({
       target: '.addMonitor',
     }],
     message: {
+      guard: 'hasActiveChild',
+      actions: 'forwardToActiveChild',
+    },
+    buttonPress: {
       guard: 'hasActiveChild',
       actions: 'forwardToActiveChild',
     },

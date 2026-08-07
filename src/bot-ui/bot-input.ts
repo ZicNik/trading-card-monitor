@@ -7,6 +7,10 @@ interface BotInputContextMap {
     chatId: string
     text: string
   }>
+  buttonPress: Readonly<{
+    chatId: string
+    payload: string
+  }>
 }
 
 type BotInputBaseContext = Readonly<{
@@ -45,5 +49,11 @@ export interface BotInputPort {
   onMessage(
     handler: BotInputHandler<'message'>,
     options: { filter?: BotInputFilter<'message'> },
+  ): void
+
+  /** @param filter Handler is called only when this predicate is true. */
+  onButtonPress(
+    handler: BotInputHandler<'buttonPress'>,
+    options: { filter?: BotInputFilter<'buttonPress'> },
   ): void
 }

@@ -21,6 +21,7 @@ export class BotUI {
     this.inputPort.onCommand('search', context => this.send(context.chatId, { type: 'command', command: 'search' }), {})
     this.inputPort.onCommand('monitor', context => this.send(context.chatId, { type: 'command', command: 'monitor' }), {})
     this.inputPort.onMessage(context => this.send(context.chatId, { type: 'message', text: context.text }), {})
+    this.inputPort.onButtonPress(context => this.send(context.chatId, { type: 'buttonPress', payload: context.payload }), {})
   }
 
   private async handleUserRegistration(id?: string): Promise<void> {
