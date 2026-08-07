@@ -30,5 +30,5 @@ export const ReplyKeyboardButton = {
 /** Object responsible for the interactions coming from the bot. */
 export interface BotOutputPort {
   sendMessage(chatId: string, text: string, options?: MessageOptions): Promise<MessageInfo>
-  editMessage(chatId: string, messageId: number, text: string, options?: MessageOptions): Promise<void>
+  editMessage(chatId: string, messageId: string, text: string, options?: MessageOptions): Promise<void>
 }

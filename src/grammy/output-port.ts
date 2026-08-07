@@ -10,8 +10,8 @@ export class GrammyOutputPort implements BotOutputPort {
     return toMessageInfo(message)
   }
 
-  async editMessage(chatId: string, messageId: number, text: string, options?: MessageOptions): Promise<void> {
-    await GRAMMY_BOT.api.editMessageText(chatId, messageId, text, toGrammyMessageOptions(options))
+  async editMessage(chatId: string, messageId: string, text: string, options?: MessageOptions): Promise<void> {
+    await GRAMMY_BOT.api.editMessageText(chatId, parseInt(messageId), text, toGrammyMessageOptions(options))
   }
 }
 

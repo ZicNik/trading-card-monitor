@@ -41,6 +41,7 @@ export class GrammyInputPort implements BotInputPort {
     options: { filter?: BotInputFilter<'buttonPress'> } = {},
   ): void {
     GRAMMY_BOT.on('callback_query:data', async (ctx) => {
+      await ctx.answerCallbackQuery()
       const payload = ctx.callbackQuery.data
       const chatId = ctx.from.id.toString()
       await this.handle({ chatId, payload }, handler, options.filter)
