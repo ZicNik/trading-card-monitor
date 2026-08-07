@@ -1,9 +1,9 @@
 import type { SearchRequestedOutput, SearchRequestedOutputPort } from '@/search'
-import type { SendMessageOptions } from '../bot-output'
+import type { MessageOptions } from '../bot-output'
 
 export type SearchRequestedViewModel = Readonly<{
   text: string
-  options: SendMessageOptions
+  options: MessageOptions
 }>
 
 export class SearchRequestedPresenter implements SearchRequestedOutputPort {

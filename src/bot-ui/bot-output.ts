@@ -1,4 +1,6 @@
-export type SendMessageOptions = Partial<Readonly<{
+export type MessageInfo = Readonly<{ id: string }>
+
+export type MessageOptions = Partial<Readonly<{
   formatting: MessageFormatting
   keyboard: ReplyKeyboard
 }>>
@@ -27,5 +29,6 @@ export const ReplyKeyboardButton = {
 
 /** Object responsible for the interactions coming from the bot. */
 export interface BotOutputPort {
-  sendMessage(chatId: string, text: string, options?: SendMessageOptions): Promise<void>
+  sendMessage(chatId: string, text: string, options?: MessageOptions): Promise<MessageInfo>
+  editMessage(chatId: string, messageId: number, text: string, options?: MessageOptions): Promise<void>
 }
