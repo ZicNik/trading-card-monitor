@@ -30,12 +30,12 @@ function toGrammyMessageOptions(options: MessageOptions | undefined) {
       }
 }
 
-function toGrammyParseMode(formatting: MessageFormatting): 'Markdown' | 'HTML' {
+function toGrammyParseMode(formatting: MessageFormatting): 'MarkdownV2' | 'HTML' {
   switch (formatting) {
     case 'html':
       return 'HTML'
     case 'markdown':
-      return 'Markdown'
+      return 'MarkdownV2'
   }
 }
 
