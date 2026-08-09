@@ -1,9 +1,15 @@
 import { ReplyKeyboard, ReplyKeyboardButton, type BotOutputPort } from '@/bot-ui/bot-output'
-import { assign, fromPromise, setup } from 'xstate'
+import { assign, fromPromise, not, setup } from 'xstate'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
-const printingsSubmissionPayload = 'printings-submitted'
+const printingsSubmissionPayload = 'printings-submit'
+const askForFoilMessage = 'Do you want to monitor foil versions of this card?'
+const foilYesPayload = 'foil-yes'
+const foilNoPayload = 'foil-no'
+const askForCtZeroMessage = 'Do you want to buy using CardTrader Zero?'
+const ctZeroYesPayload = 'ct-zero-yes'
+const ctZeroNoPayload = 'ct-zero-no'
 
 export const addCardTraderMonitorMachine = setup({
   types: {
@@ -12,14 +18,55 @@ export const addCardTraderMonitorMachine = setup({
     },
     context: {} as {
       chatId: string
+      lastMessageId?: string
       cardName?: string
-      printingsMessageId?: string
       printings?: string[]
       printingsSelection: boolean[]
+      maxPrice?: string
+      foil?: boolean
+      ctZero?: boolean
     },
     events: {} as
     | { type: 'message', text: string }
     | { type: 'buttonPress', payload: string },
+  },
+  guards: {
+    isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
+    isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)([.,]\d{2})?$/.test(event.text),
+  },
+  actions: {
+    assignPrintingsSelection: assign({ printingsSelection: ({ context, event }) => {
+      if (event.type !== 'buttonPress')
+        return context.printingsSelection
+      const index = parseInt(event.payload)
+      const newSelection = [...context.printingsSelection]
+      newSelection[index] = !newSelection[index]
+      return newSelection
+    } }),
+    assignFoil: assign({ foil: ({ event }) => {
+      if (event.type !== 'buttonPress')
+        return undefined
+      switch (event.payload) {
+        case foilYesPayload:
+          return true
+        case foilNoPayload:
+          return false
+        default:
+          return undefined
+      }
+    } }),
+    assignCtZero: assign({ ctZero: ({ event }) => {
+      if (event.type !== 'buttonPress')
+        return undefined
+      switch (event.payload) {
+        case ctZeroYesPayload:
+          return true
+        case ctZeroNoPayload:
+          return false
+        default:
+          return undefined
+      }
+    } }),
   },
   actors: {
     askForCardName: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
@@ -54,6 +101,28 @@ export const addCardTraderMonitorMachine = setup({
         selection: boolean[]
       }
     }) => input.port.editMessage(input.chatId, input.messageId, printingsSelectionMessage(input.printings, input.selection))),
+    askForMaxPrice: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, 'What is the maximum price, in euros, you are willing to pay for this card?')),
+    showMaxPriceError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, 'This is not a valid amount. Try again.')),
+    askForFoil: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, askForFoilMessage, {
+        keyboard: ReplyKeyboard.from([
+          [['Yes', foilYesPayload], ['No', foilNoPayload]],
+          ['Any'],
+        ]),
+      })),
+    submitFoil: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, messageId: string, foil: boolean | undefined } }) =>
+      input.port.editMessage(input.chatId, input.messageId, `${askForFoilMessage} *${toYesOrNoOrAny(input.foil)}*`, { formatting: 'markdown' })),
+    askForCtZero: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, askForCtZeroMessage, {
+        keyboard: ReplyKeyboard.from([
+          [['Yes', ctZeroYesPayload], ['No', ctZeroNoPayload]],
+          ['Any'],
+        ]),
+      })),
+    submitCtZero: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, messageId: string, ctZero: boolean | undefined } }) =>
+      input.port.editMessage(input.chatId, input.messageId, `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' })),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -85,49 +154,134 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, printings: context.printings! }),
         onDone: {
           target: 'awaitingForPrintingsSelection',
-          actions: assign({ printingsMessageId: ({ event }) => event.output.id }),
+          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
         },
       },
     },
     awaitingForPrintingsSelection: {
       on: {
         buttonPress: [{
-          guard: ({ event }) => event.payload !== printingsSubmissionPayload,
-          actions: assign({
-            printingsSelection: ({ context, event }) => {
-              const index = parseInt(event.payload)
-              const newSelection = [...context.printingsSelection]
-              newSelection[index] = !newSelection[index]
-              return newSelection
-            },
-          }),
-          target: 'updatingPrintingsSelection',
-        }, {
-          guard: ({ event }) => event.payload === printingsSubmissionPayload,
+          guard: 'isPrintingsSubmission',
           target: 'submittingPrintingsSelection',
+        }, {
+          guard: not('isPrintingsSubmission'),
+          actions: 'assignPrintingsSelection',
+          target: 'updatingPrintingsSelection',
         }],
       },
     },
     updatingPrintingsSelection: {
       invoke: {
         src: 'updatePrintingsSelection',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, messageId: context.printingsMessageId!, printings: context.printings!, selection: context.printingsSelection }),
+        input: ({ context, self }) => ({
+          port: self.system.env.outputPort,
+          chatId: context.chatId,
+          messageId: context.lastMessageId!,
+          printings: context.printings!,
+          selection: context.printingsSelection,
+        }),
         onDone: 'awaitingForPrintingsSelection',
       },
     },
     submittingPrintingsSelection: {
       invoke: {
         src: 'submitPrintingsSelection',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, messageId: context.printingsMessageId!, printings: context.printings!, selection: context.printingsSelection }),
+        input: ({ context, self }) => ({
+          port: self.system.env.outputPort,
+          chatId: context.chatId,
+          messageId: context.lastMessageId!,
+          printings: context.printings!,
+          selection: context.printingsSelection,
+        }),
+        onDone: 'askingForMaxPrice',
+      },
+    },
+    askingForMaxPrice: {
+      invoke: {
+        src: 'askForMaxPrice',
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        onDone: 'awaitingForMaxPrice',
+      },
+    },
+    awaitingForMaxPrice: {
+      on: {
+        message: [{
+          guard: 'isValidMaxPrice',
+          actions: assign({ maxPrice: ({ event }) => event.text }),
+          target: 'askingForFoil',
+        }, {
+          guard: not('isValidMaxPrice'),
+          target: 'showingMaxPriceError',
+        }],
+      },
+    },
+    showingMaxPriceError: {
+      invoke: {
+        src: 'showMaxPriceError',
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        onDone: 'awaitingForMaxPrice',
+      },
+    },
+    askingForFoil: {
+      invoke: {
+        src: 'askForFoil',
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        onDone: {
+          target: 'awaitingForFoil',
+          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
+        },
+      },
+    },
+    awaitingForFoil: {
+      on: {
+        buttonPress: {
+          actions: 'assignFoil',
+          target: 'submittingFoil',
+        },
+      },
+    },
+    submittingFoil: {
+      invoke: {
+        src: 'submitFoil',
+        input: ({ context, self }) => ({
+          port: self.system.env.outputPort,
+          chatId: context.chatId,
+          messageId: context.lastMessageId!,
+          foil: context.foil,
+        }),
+        onDone: 'askingForCtZero',
+      },
+    },
+    askingForCtZero: {
+      invoke: {
+        src: 'askForCtZero',
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        onDone: {
+          target: 'awaitingForCtZero',
+          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
+        },
+      },
+    },
+    awaitingForCtZero: {
+      on: {
+        buttonPress: {
+          actions: 'assignCtZero',
+          target: 'submittingCtZero',
+        },
+      },
+    },
+    submittingCtZero: {
+      invoke: {
+        src: 'submitCtZero',
+        input: ({ context, self }) => ({
+          port: self.system.env.outputPort,
+          chatId: context.chatId,
+          messageId: context.lastMessageId!,
+          ctZero: context.ctZero,
+        }),
         onDone: 'done',
       },
     },
-    askingForMaxPrice: {},
-    awaitingForMaxPrice: {},
-    askingForFoil: {},
-    awaitingForFoil: {},
-    askingForCtZero: {},
-    awaitingForCtZero: {},
     done: { type: 'final' },
   },
 })
@@ -142,4 +296,15 @@ function printingsSelectionKeyboard(printings: string[], selection: boolean[] = 
     ...printings.map((printing, index) => [ReplyKeyboardButton.create(printing, index.toString())]),
     ...(selection.includes(true) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
   ]
+}
+
+function toYesOrNoOrAny(b: boolean | undefined): string {
+  switch (b) {
+    case true:
+      return 'Yes'
+    case false:
+      return 'No'
+    case undefined:
+      return 'Any'
+  }
 }
