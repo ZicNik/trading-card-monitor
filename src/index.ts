@@ -1,14 +1,14 @@
+import { CardTraderApis, CardTraderFiltersMatcher, CardTraderListingCatalog } from '@/cardtrader'
+import { CardTraderDbSynchronizer } from '@/cardtrader/db-synchronizer'
 import { CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
 import { DbUserRepository } from '@/drizzle'
+import { DbCardMonitorRepository } from '@/drizzle/repositories/card-monitor-repository'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
+import { CardCatalog } from '@/search'
 import { UserRegistrationUseCase } from '@/user'
 import { BotUI } from './bot-ui/bot-ui'
-import { CardTraderFiltersMatcher, CardTraderListingCatalog } from './cardtrader'
-import { CardTraderApis } from './cardtrader/apis'
-import { CardTraderDbSynchronizer } from './cardtrader/db-synchronizer'
-import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-repository'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -30,7 +30,14 @@ import { DbCardMonitorRepository } from './drizzle/repositories/card-monitor-rep
 
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
-const catalog = new ScryfallCatalog(scryfallApis)
+const scryfallCatalog = new ScryfallCatalog(scryfallApis)
+const catalog = new CardCatalog({
+  fuzzySearcher: scryfallCatalog,
+  noMarketFetcher: scryfallCatalog,
+  marketFetchers: {
+    cardtrader: scryfallCatalog,
+  },
+})
 const userRepository = new DbUserRepository()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
 const botUI = new BotUI(

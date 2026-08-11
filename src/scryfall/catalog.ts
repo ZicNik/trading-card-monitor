@@ -1,9 +1,9 @@
 import type { Card } from '@/core'
-import type { CardCatalog, CardPrototype } from '@/search'
+import type { CardFetcher, CardFuzzySearcher, CardPrototype } from '@/search'
 import { ScryfallApis } from './apis'
 import type { ScryfallCard } from './types'
 
-export class ScryfallCatalog implements CardCatalog {
+export class ScryfallCatalog implements CardFuzzySearcher, CardFetcher {
   constructor(private readonly apis: ScryfallApis) {}
 
   async fuzzySearch(name: string): Promise<CardPrototype | undefined> {
