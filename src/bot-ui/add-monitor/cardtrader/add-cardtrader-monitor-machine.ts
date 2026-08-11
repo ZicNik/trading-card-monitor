@@ -18,7 +18,7 @@ export const addCardTraderMonitorMachine = setup({
     },
     context: {} as {
       chatId: string
-      lastMessageId?: string
+      messageId?: string
       cardName?: string
       printings?: string[]
       printingsSelection: boolean[]
@@ -154,7 +154,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, printings: context.printings! }),
         onDone: {
           target: 'awaitingForPrintingsSelection',
-          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
+          actions: assign({ messageId: ({ event }) => event.output.id }),
         },
       },
     },
@@ -176,7 +176,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
           chatId: context.chatId,
-          messageId: context.lastMessageId!,
+          messageId: context.messageId!,
           printings: context.printings!,
           selection: context.printingsSelection,
         }),
@@ -189,7 +189,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
           chatId: context.chatId,
-          messageId: context.lastMessageId!,
+          messageId: context.messageId!,
           printings: context.printings!,
           selection: context.printingsSelection,
         }),
@@ -228,7 +228,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
         onDone: {
           target: 'awaitingForFoil',
-          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
+          actions: assign({ messageId: ({ event }) => event.output.id }),
         },
       },
     },
@@ -246,7 +246,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
           chatId: context.chatId,
-          messageId: context.lastMessageId!,
+          messageId: context.messageId!,
           foil: context.foil,
         }),
         onDone: 'askingForCtZero',
@@ -258,7 +258,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
         onDone: {
           target: 'awaitingForCtZero',
-          actions: assign({ lastMessageId: ({ event }) => event.output.id }),
+          actions: assign({ messageId: ({ event }) => event.output.id }),
         },
       },
     },
@@ -276,7 +276,7 @@ export const addCardTraderMonitorMachine = setup({
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
           chatId: context.chatId,
-          messageId: context.lastMessageId!,
+          messageId: context.messageId!,
           ctZero: context.ctZero,
         }),
         onDone: 'done',
