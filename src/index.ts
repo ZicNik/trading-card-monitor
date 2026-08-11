@@ -1,5 +1,4 @@
-import { CardTraderApis, CardTraderFiltersMatcher, CardTraderListingCatalog } from '@/cardtrader'
-import { CardTraderDbSynchronizer } from '@/cardtrader/db-synchronizer'
+import { CardTraderApis, CardTraderCardFetcher, CardTraderDbSynchronizer, CardTraderFiltersMatcher, CardTraderListingCatalog } from '@/cardtrader'
 import { CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
 import { DbUserRepository } from '@/drizzle'
 import { DbCardMonitorRepository } from '@/drizzle/repositories/card-monitor-repository'
@@ -31,12 +30,11 @@ import { BotUI } from './bot-ui/bot-ui'
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const scryfallCatalog = new ScryfallCatalog(scryfallApis)
+const cardTraderCardFetcher = new CardTraderCardFetcher()
 const catalog = new CardCatalog({
   fuzzySearcher: scryfallCatalog,
   noMarketFetcher: scryfallCatalog,
-  marketFetchers: {
-    cardtrader: scryfallCatalog,
-  },
+  marketFetchers: { cardtrader: cardTraderCardFetcher },
 })
 const userRepository = new DbUserRepository()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
@@ -48,34 +46,24 @@ const botUI = new BotUI(
   catalog,
 )
 
-// Example usage of the CardCatalog
-
-async function testCardCatalog() {
-  const start = new Date()
-  const prototype = await catalog.fuzzySearch('subtle')
-  if (prototype === undefined)
-    return
-  const card = await catalog.getCard(prototype.name)
-  const end = new Date()
-  console.log(`${(end.getTime() - start.getTime())}ms`)
-  console.log(card)
-}
-
-// testCardCatalog()
-//   .then(() => {
-//     testCardCatalog()
-//       .then(() => {
-//         void testCardCatalog()
-//       })
-//       .catch(console.error)
-//   })
-//   .catch(console.error)
-
 function testBotUI() {
   botUI.start()
 }
 
 // testBotUI()
+
+async function testCardCatalog() {
+  const prototype = await catalog.fuzzySearch('subtle')
+  console.log(prototype)
+  if (prototype === undefined)
+    return
+  const noMarketCard = await catalog.getCard(prototype.name)
+  const cardTraderCard = await catalog.getCard(prototype.name, 'cardtrader')
+  console.log(noMarketCard)
+  console.log(cardTraderCard)
+}
+
+// testCardCatalog().catch(console.error)
 
 async function testCardTraderApis() {
   const cardTraderApis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
