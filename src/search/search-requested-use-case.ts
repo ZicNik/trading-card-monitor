@@ -18,7 +18,7 @@ export class SearchRequestedUseCase {
   async execute(input: SearchRequestedInput) {
     const prototype = await this.catalog.fuzzySearch(input)
     if (prototype === undefined)
-      return
+      throw new Error(`Fuzzy search of ${input} produced no result`)
     this.outputPort.present(prototype)
   }
 }
