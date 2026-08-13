@@ -1,6 +1,7 @@
-import { SearchRequestedUseCase, type CardCatalog } from '@/search'
+import { ExactSearchRequestedUseCase, SearchRequestedUseCase, type CardCatalog } from '@/search'
 import type { UserRegistrationUseCase } from '@/user'
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
+import { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
 import { rootMachine, type RootMachineEvent } from './root/root-machine'
@@ -33,6 +34,8 @@ export class BotUI {
     const snapshot = await this.storage.hydrate(chatId)
     const searchRequestedPresenter = new SearchRequestedPresenter()
     const searchRequestedUseCase = new SearchRequestedUseCase(searchRequestedPresenter, this.cardCatalog)
+    const printingsSelectionPresenter = new PrintingsSelectionPresenter()
+    const exactSearchRequestedUseCase = new ExactSearchRequestedUseCase(printingsSelectionPresenter, this.cardCatalog)
     const actor = createActor(rootMachine, {
       input: { chatId },
       ...(snapshot !== undefined ? { snapshot } : {}),
@@ -42,6 +45,8 @@ export class BotUI {
       outputPort: this.outputPort,
       searchRequestedUseCase,
       searchRequestedPresenter,
+      printingsSelectionPresenter,
+      exactSearchRequestedUseCase,
     }
     actor.start()
     actor.send(event)

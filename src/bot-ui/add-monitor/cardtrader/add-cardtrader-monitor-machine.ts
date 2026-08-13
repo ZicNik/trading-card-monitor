@@ -1,9 +1,9 @@
 import { ReplyKeyboard, ReplyKeyboardButton, type BotOutputPort } from '@/bot-ui/bot-output'
 import { assign, fromPromise, not, setup } from 'xstate'
+import { printingsSubmissionPayload } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
-const printingsSubmissionPayload = 'printings-submit'
 const askForFoilMessage = 'Do you want to monitor foil versions of this card?'
 const foilYesPayload = 'foil-yes'
 const foilNoPayload = 'foil-no'

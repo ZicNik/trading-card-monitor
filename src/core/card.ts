@@ -1,6 +1,6 @@
 export type Card = Readonly<{
   name: string
-  printings: CardPrinting[]
+  printings: readonly CardPrinting[]
 }>
 
 /** A card's specific iteration. */
