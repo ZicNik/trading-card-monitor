@@ -14,6 +14,8 @@ export class ScryfallCatalog implements CardFuzzySearcher, CardFetcher {
     if (result === undefined)
       return undefined
     const prototype = toCardPrototype(result)
+    if (prototype === undefined)
+      return undefined
     fuzzySearchCache.put(prototype)
     return prototype
   }
@@ -55,11 +57,11 @@ const getCardCache = new Map<string, Card>()
 
 // MARK: - Mappers
 
-function toCardPrototype(card: ScryfallCard): CardPrototype {
-  return {
-    name: card.name,
-    imgUrl: card.image_uris.normal,
-  }
+function toCardPrototype(card: ScryfallCard): CardPrototype | undefined {
+  const imgUrl = card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal
+  if (imgUrl === undefined)
+    return undefined
+  return { name: card.name, imgUrl }
 }
 
 /** Assumes all prints are of the same conceptual card. Any error results in `undefined`. */
