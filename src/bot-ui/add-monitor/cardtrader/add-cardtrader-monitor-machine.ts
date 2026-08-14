@@ -1,6 +1,7 @@
-import { ReplyKeyboard, ReplyKeyboardButton, type BotOutputPort } from '@/bot-ui/bot-output'
+import { ReplyKeyboard, type BotOutputPort } from '@/bot-ui/bot-output'
+import type { ExactSearchRequestedUseCase } from '@/search'
 import { assign, fromPromise, not, setup } from 'xstate'
-import { printingsSubmissionPayload } from '../printings-selection-presenter'
+import { PrintingsSelectionPresenter, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
@@ -20,8 +21,7 @@ export const addCardTraderMonitorMachine = setup({
       chatId: string
       messageId?: string
       cardName?: string
-      printings?: string[]
-      printingsSelection: boolean[]
+      printingsSelection?: PrintingsSelectionState
       maxPrice?: string
       foil?: boolean
       ctZero?: boolean
@@ -31,17 +31,23 @@ export const addCardTraderMonitorMachine = setup({
     | { type: 'buttonPress', payload: string },
   },
   guards: {
+    isButtonPress: ({ event }) => event.type === 'buttonPress',
     isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
     isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)([.,]\d{2})?$/.test(event.text),
   },
   actions: {
-    assignPrintingsSelection: assign({ printingsSelection: ({ context, event }) => {
+    setPrintingsSelectionPresenterState: ({ context, system }) => { system.env.printingsSelectionPresenter.state = context.printingsSelection! },
+    togglePrinting: assign({ printingsSelection: ({ context, event, system }) => {
       if (event.type !== 'buttonPress')
         return context.printingsSelection
-      const index = parseInt(event.payload)
-      const newSelection = [...context.printingsSelection]
-      newSelection[index] = !newSelection[index]
-      return newSelection
+      const presenter = system.env.printingsSelectionPresenter
+      presenter.togglePrinting(parseInt(event.payload))
+      return presenter.state
+    } }),
+    submitPrintings: assign({ printingsSelection: ({ system }) => {
+      const presenter = system.env.printingsSelectionPresenter
+      presenter.submit()
+      return presenter.state
     } }),
     assignFoil: assign({ foil: ({ event }) => {
       if (event.type !== 'buttonPress')
@@ -71,36 +77,29 @@ export const addCardTraderMonitorMachine = setup({
   actors: {
     askForCardName: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'Which card are you willing to monitor on CardTrader?')),
-    askForPrintingsSelection: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, printings: string[] } }) =>
-      input.port.sendMessage(
-        input.chatId,
-        printingsSelectionMessage(input.printings),
-        { keyboard: printingsSelectionKeyboard(input.printings) },
-      )),
-    updatePrintingsSelection: fromPromise(({ input }: {
+    fetchPrintings: fromPromise(async ({ input }: { input: { useCase: ExactSearchRequestedUseCase, presenter: PrintingsSelectionPresenter, cardName: string } }) => {
+      await input.useCase.execute({ cardName: input.cardName, market: 'cardtrader' })
+      return input.presenter.state
+    }),
+    showPrintingsFetchError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
+      input.port.sendMessage(input.chatId, 'Something went wrong. Try again: which card are you loooking for?')),
+    askForPrintingsSelection: fromPromise(async ({ input }: { input: { port: BotOutputPort, chatId: string, presenter: PrintingsSelectionPresenter } }) => {
+      const vm = input.presenter.vm
+      return await input.port.sendMessage(input.chatId, vm.text, vm.options)
+    }),
+    editPrintingsSelection: fromPromise(async ({ input }: {
       input: {
         port: BotOutputPort
+        presenter: PrintingsSelectionPresenter
         chatId: string
         messageId: string
-        printings: string[]
-        selection: boolean[]
       }
-    }) =>
-      input.port.editMessage(
-        input.chatId,
-        input.messageId,
-        printingsSelectionMessage(input.printings, input.selection),
-        { keyboard: printingsSelectionKeyboard(input.printings, input.selection) },
-      )),
-    submitPrintingsSelection: fromPromise(({ input }: {
-      input: {
-        port: BotOutputPort
-        chatId: string
-        messageId: string
-        printings: string[]
-        selection: boolean[]
-      }
-    }) => input.port.editMessage(input.chatId, input.messageId, printingsSelectionMessage(input.printings, input.selection))),
+    }) => {
+      const presenter = input.presenter
+      const vm = presenter.vm
+      await input.port.editMessage(input.chatId, input.messageId, vm.text, vm.options)
+      return { isSubmission: presenter.state.submitted }
+    }),
     askForMaxPrice: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'What is the maximum price, in euros, you are willing to pay for this card?')),
     showMaxPriceError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
@@ -125,11 +124,7 @@ export const addCardTraderMonitorMachine = setup({
       input.port.editMessage(input.chatId, input.messageId, `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' })),
   },
 }).createMachine({
-  context: ({ input }) => ({
-    chatId: input.chatId,
-    printings: ['One', 'Two', 'Three', 'Four', 'Five'], // For testing purposes, until fetching is implemented
-    printingsSelection: [false, false, false, false, false],
-  }),
+  context: ({ input }) => ({ chatId: input.chatId }),
   initial: 'askingForCardName',
   states: {
     askingForCardName: {
@@ -147,11 +142,32 @@ export const addCardTraderMonitorMachine = setup({
         },
       },
     },
-    fetchingPrintings: {},
+    fetchingPrintings: {
+      invoke: {
+        src: 'fetchPrintings',
+        input: ({ context, self }) => ({
+          useCase: self.system.env.exactSearchRequestedUseCase,
+          presenter: self.system.env.printingsSelectionPresenter,
+          cardName: context.cardName!,
+        }),
+        onError: 'printingsFetchError',
+        onDone: {
+          target: 'askingForPrintingsSelection',
+          actions: assign({ printingsSelection: ({ event }) => event.output }),
+        },
+      },
+    },
+    printingsFetchError: {
+      invoke: {
+        src: 'showPrintingsFetchError',
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        onDone: 'awaitingForCardName',
+      },
+    },
     askingForPrintingsSelection: {
       invoke: {
         src: 'askForPrintingsSelection',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, printings: context.printings! }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, presenter: self.system.env.printingsSelectionPresenter }),
         onDone: {
           target: 'awaitingForPrintingsSelection',
           actions: assign({ messageId: ({ event }) => event.output.id }),
@@ -159,41 +175,35 @@ export const addCardTraderMonitorMachine = setup({
       },
     },
     awaitingForPrintingsSelection: {
+      entry: 'setPrintingsSelectionPresenterState',
       on: {
         buttonPress: [{
-          guard: 'isPrintingsSubmission',
-          target: 'submittingPrintingsSelection',
-        }, {
           guard: not('isPrintingsSubmission'),
-          actions: 'assignPrintingsSelection',
-          target: 'updatingPrintingsSelection',
+          actions: 'togglePrinting',
+          target: 'editingPrintingsSelection',
+        }, {
+          guard: 'isPrintingsSubmission',
+          actions: 'submitPrintings',
+          target: 'editingPrintingsSelection',
         }],
       },
     },
-    updatingPrintingsSelection: {
+    editingPrintingsSelection: {
       invoke: {
-        src: 'updatePrintingsSelection',
+        src: 'editPrintingsSelection',
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
+          presenter: self.system.env.printingsSelectionPresenter,
           chatId: context.chatId,
           messageId: context.messageId!,
-          printings: context.printings!,
-          selection: context.printingsSelection,
         }),
-        onDone: 'awaitingForPrintingsSelection',
-      },
-    },
-    submittingPrintingsSelection: {
-      invoke: {
-        src: 'submitPrintingsSelection',
-        input: ({ context, self }) => ({
-          port: self.system.env.outputPort,
-          chatId: context.chatId,
-          messageId: context.messageId!,
-          printings: context.printings!,
-          selection: context.printingsSelection,
-        }),
-        onDone: 'askingForMaxPrice',
+        onDone: [{
+          guard: ({ event }) => !event.output.isSubmission,
+          target: 'awaitingForPrintingsSelection',
+        }, {
+          guard: ({ event }) => event.output.isSubmission,
+          target: 'askingForMaxPrice',
+        }],
       },
     },
     askingForMaxPrice: {
@@ -285,18 +295,6 @@ export const addCardTraderMonitorMachine = setup({
     done: { type: 'final' },
   },
 })
-
-function printingsSelectionMessage(printings: string[], selection: boolean[] = []): string {
-  return 'Select the printings you would like to monitor.\n'
-    + printings.map((printing, index) => `${selection[index] ? '✅' : '❌'} ${printing}`).join('\n')
-}
-
-function printingsSelectionKeyboard(printings: string[], selection: boolean[] = []): ReplyKeyboard {
-  return [
-    ...printings.map((printing, index) => [ReplyKeyboardButton.create(printing, index.toString())]),
-    ...(selection.includes(true) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
-  ]
-}
 
 function toYesOrNoOrAny(b: boolean | undefined): string {
   switch (b) {

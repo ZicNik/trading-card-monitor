@@ -8,45 +8,39 @@ export type PrintingsSelectionViewModel = Readonly<{
   options: MessageOptions
 }>
 
-type PrintingsSelectionState = Readonly<{
+export type PrintingsSelectionState = Readonly<{
   printings: ExactSearchRequestedOutput['printings']
   selection: readonly boolean[]
-  keyboardOn: boolean
+  submitted: boolean
 }>
 
 export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPort {
   state!: PrintingsSelectionState
-  vm!: PrintingsSelectionViewModel
+  get vm(): PrintingsSelectionViewModel {
+    const printings = [...this.state.printings]
+    const selection = [...this.state.selection]
+    return {
+      text: text(printings, selection),
+      options: { ...(this.state.submitted ? {} : { keyboard: keyboard(printings, selection) }) },
+    }
+  }
 
   present(output: ExactSearchRequestedOutput): void {
     this.state = {
       printings: output.printings,
       selection: Array(output.printings.length).fill(false),
-      keyboardOn: true,
+      submitted: false,
     }
-    this.updateVM()
   }
 
   togglePrinting(index: number): void {
     const selection = [...this.state.selection]
     selection[index] = !selection[index]
     this.state = { ...this.state, selection }
-    this.updateVM()
   }
 
-  toggleKeyboard(on?: boolean): void {
-    const keyboardOn = on === undefined ? !this.state.keyboardOn : on
-    this.state = { ...this.state, keyboardOn }
-    this.updateVM()
-  }
-
-  private updateVM(): void {
-    const printings = [...this.state.printings]
-    const selection = [...this.state.selection]
-    this.vm = {
-      text: text(printings, selection),
-      options: { ...(this.state.keyboardOn ? { keyboard: keyboard(printings, selection) } : {}) },
-    }
+  submit(): void {
+    this.state = { ...this.state, submitted: true }
   }
 }
 
