@@ -1,7 +1,7 @@
-import type { SearchRequestedUseCase } from '@/search'
+import type { FuzzySearchRequestedUseCase } from '@/search'
 import { assign, fromPromise, setup } from 'xstate'
 import type { BotOutputPort } from '../bot-output'
-import type { SearchRequestedPresenter, SearchRequestedViewModel } from './search-requested-presenter'
+import type { FuzzySearchViewModel } from './fuzzy-search-presenter'
 
 export const searchMachineId = 'searchMachine'
 
@@ -13,18 +13,14 @@ export const searchMachine = setup({
     context: {} as {
       chatId: string
       query?: string
-      showResultVM?: SearchRequestedViewModel
     },
     events: {} as { type: 'message', text: string },
   },
   actors: {
     askForQuery: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'Which card are you looking for?')),
-    search: fromPromise(async ({ input }: { input: { useCase: SearchRequestedUseCase, presenter: SearchRequestedPresenter, query: string } }) => {
-      await input.useCase.execute(input.query)
-      return input.presenter.vm
-    }),
-    showResult: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, vm: SearchRequestedViewModel } }) =>
+    search: fromPromise(({ input }: { input: { useCase: FuzzySearchRequestedUseCase, query: string } }) => input.useCase.execute(input.query)),
+    showResult: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, vm: FuzzySearchViewModel } }) =>
       input.port.sendMessage(input.chatId, input.vm.text, input.vm.options)),
     showError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'No card found with this name. Try again.')),
@@ -53,18 +49,15 @@ export const searchMachine = setup({
     searching: {
       invoke: {
         src: 'search',
-        input: ({ context, self }) => ({ useCase: self.system.env.searchRequestedUseCase, presenter: self.system.env.searchRequestedPresenter, query: context.query! }),
-        onDone: {
-          target: 'showingResult',
-          actions: assign({ showResultVM: ({ event }) => event.output }),
-        },
+        input: ({ context, self }) => ({ useCase: self.system.env.fuzzySearchRequestedUseCase, query: context.query! }),
+        onDone: 'showingResult',
         onError: 'showingError',
       },
     },
     showingResult: {
       invoke: {
         src: 'showResult',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, vm: context.showResultVM! }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, vm: self.system.env.fuzzySearchPresenter.vm }),
         onDone: 'done',
       },
     },

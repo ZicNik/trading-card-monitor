@@ -1,11 +1,11 @@
-import { ExactSearchRequestedUseCase, SearchRequestedUseCase, type CardCatalog } from '@/search'
+import { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, type CardCatalog } from '@/search'
 import type { UserRegistrationUseCase } from '@/user'
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
 import { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
 import { rootMachine, type RootMachineEvent } from './root/root-machine'
-import { SearchRequestedPresenter } from './search/search-requested-presenter'
+import { FuzzySearchPresenter } from './search/fuzzy-search-presenter'
 import type { StateMachineStorage } from './state-machine-storage'
 
 export class BotUI {
@@ -32,8 +32,8 @@ export class BotUI {
 
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {
     const snapshot = await this.storage.hydrate(chatId)
-    const searchRequestedPresenter = new SearchRequestedPresenter()
-    const searchRequestedUseCase = new SearchRequestedUseCase(searchRequestedPresenter, this.cardCatalog)
+    const fuzzySearchPresenter = new FuzzySearchPresenter()
+    const fuzzySearchRequestedUseCase = new FuzzySearchRequestedUseCase(fuzzySearchPresenter, this.cardCatalog)
     const printingsSelectionPresenter = new PrintingsSelectionPresenter()
     const exactSearchRequestedUseCase = new ExactSearchRequestedUseCase(printingsSelectionPresenter, this.cardCatalog)
     const actor = createActor(rootMachine, {
@@ -43,8 +43,8 @@ export class BotUI {
     // Initialize the actor system's environment
     actor.system.env = {
       outputPort: this.outputPort,
-      searchRequestedUseCase,
-      searchRequestedPresenter,
+      fuzzySearchRequestedUseCase,
+      fuzzySearchPresenter,
       printingsSelectionPresenter,
       exactSearchRequestedUseCase,
     }

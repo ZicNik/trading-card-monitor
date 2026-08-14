@@ -1,13 +1,13 @@
-import type { ExactSearchRequestedUseCase, SearchRequestedUseCase } from '@/search'
+import type { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase } from '@/search'
 import type { PrintingsSelectionPresenter } from '../add-monitor/printings-selection-presenter'
 import type { BotOutputPort } from '../bot-output'
-import type { SearchRequestedPresenter } from '../search/search-requested-presenter'
+import type { FuzzySearchPresenter } from '../search/fuzzy-search-presenter'
 
 declare module '../bot-environment' {
   interface BotEnvironment {
     outputPort: BotOutputPort
-    searchRequestedUseCase: SearchRequestedUseCase
-    searchRequestedPresenter: SearchRequestedPresenter
+    fuzzySearchRequestedUseCase: FuzzySearchRequestedUseCase
+    fuzzySearchPresenter: FuzzySearchPresenter
     exactSearchRequestedUseCase: ExactSearchRequestedUseCase
     printingsSelectionPresenter: PrintingsSelectionPresenter
   }

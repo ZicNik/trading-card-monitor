@@ -1,21 +1,21 @@
 import type { CardCatalog } from './card-catalog'
 import type { CardPrototype } from './card-prototype'
 
-export type SearchRequestedInput = string
+export type FuzzySearchRequestedInput = string
 
-export type SearchRequestedOutput = CardPrototype
+export type FuzzySearchRequestedOutput = CardPrototype
 
-export interface SearchRequestedOutputPort {
-  present(output: SearchRequestedOutput): void
+export interface FuzzySearchRequestedOutputPort {
+  present(output: FuzzySearchRequestedOutput): void
 }
 
-export class SearchRequestedUseCase {
+export class FuzzySearchRequestedUseCase {
   constructor(
-    private readonly outputPort: SearchRequestedOutputPort,
+    private readonly outputPort: FuzzySearchRequestedOutputPort,
     private readonly catalog: CardCatalog,
   ) {}
 
-  async execute(input: SearchRequestedInput) {
+  async execute(input: FuzzySearchRequestedInput) {
     const prototype = await this.catalog.fuzzySearch(input)
     if (prototype === undefined)
       throw new Error(`Fuzzy search of ${input} produced no result`)
