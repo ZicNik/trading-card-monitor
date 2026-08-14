@@ -1,7 +1,7 @@
 import { ReplyKeyboard, type BotOutputPort } from '@/bot-ui/bot-output'
 import type { ExactSearchRequestedUseCase } from '@/search'
 import { assign, fromPromise, not, setup } from 'xstate'
-import { PrintingsSelectionPresenter, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
+import { PrintingsSelectionPresenter, printingsSubmissionPayload, type PrintingsSelectionState, type PrintingsSelectionViewModel } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
@@ -85,22 +85,19 @@ export const addCardTraderMonitorMachine = setup({
     }),
     showPrintingsFetchError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'Something went wrong. Try again: which card are you loooking for?')),
-    askForPrintingsSelection: fromPromise(async ({ input }: { input: { port: BotOutputPort, chatId: string, presenter: PrintingsSelectionPresenter } }) => {
-      const vm = input.presenter.vm
-      return await input.port.sendMessage(input.chatId, vm.text, vm.options)
-    }),
+    askForPrintingsSelection: fromPromise(async ({ input }: { input: { port: BotOutputPort, chatId: string, vm: PrintingsSelectionViewModel } }) =>
+      input.port.sendMessage(input.chatId, input.vm.text, input.vm.options)),
     editPrintingsSelection: fromPromise(async ({ input }: {
       input: {
         port: BotOutputPort
-        presenter: PrintingsSelectionPresenter
         chatId: string
         messageId: string
+        vm: PrintingsSelectionViewModel
+        isSubmission: boolean
       }
     }) => {
-      const presenter = input.presenter
-      const vm = presenter.vm
-      await input.port.editMessage(input.chatId, input.messageId, vm.text, vm.options)
-      return { isSubmission: presenter.state.submitted }
+      await input.port.editMessage(input.chatId, input.messageId, input.vm.text, input.vm.options)
+      return { isSubmission: input.isSubmission }
     }),
     askForMaxPrice: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
       input.port.sendMessage(input.chatId, 'What is the maximum price, in euros, you are willing to pay for this card?')),
@@ -169,7 +166,7 @@ export const addCardTraderMonitorMachine = setup({
     askingForPrintingsSelection: {
       invoke: {
         src: 'askForPrintingsSelection',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, presenter: self.system.env.printingsSelectionPresenter }),
+        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, vm: self.system.env.printingsSelectionPresenter.vm }),
         onDone: {
           target: 'awaitingForPrintingsSelection',
           actions: assign({ messageId: ({ event }) => event.output.id }),
@@ -194,9 +191,10 @@ export const addCardTraderMonitorMachine = setup({
         src: 'editPrintingsSelection',
         input: ({ context, self }) => ({
           port: self.system.env.outputPort,
-          presenter: self.system.env.printingsSelectionPresenter,
           chatId: context.chatId,
           messageId: context.messageId!,
+          vm: self.system.env.printingsSelectionPresenter.vm,
+          isSubmission: self.system.env.printingsSelectionPresenter.state.submitted,
         }),
         onDone: [{
           guard: ({ event }) => !event.output.isSubmission,
