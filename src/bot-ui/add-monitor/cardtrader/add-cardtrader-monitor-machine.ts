@@ -5,7 +5,7 @@ import { PrintingsSelectionPresenter, printingsSubmissionPayload, type Printings
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
-const askForFoilMessage = 'Do you want to monitor foil versions of this card?'
+const askForFoilMessage = 'Do you want the card to be foil?'
 const foilYesPayload = 'foil-yes'
 const foilNoPayload = 'foil-no'
 const askForCtZeroMessage = 'Do you want to buy using CardTrader Zero?'
@@ -41,11 +41,13 @@ export const addCardTraderMonitorMachine = setup({
       if (event.type !== 'buttonPress')
         return context.printingsSelection
       const presenter = system.env.printingsSelectionPresenter
+      presenter.state = context.printingsSelection!
       presenter.togglePrinting(parseInt(event.payload))
       return presenter.state
     } }),
-    submitPrintings: assign({ printingsSelection: ({ system }) => {
+    submitPrintings: assign({ printingsSelection: ({ context, system }) => {
       const presenter = system.env.printingsSelectionPresenter
+      presenter.state = context.printingsSelection!
       presenter.submit()
       return presenter.state
     } }),
@@ -76,7 +78,7 @@ export const addCardTraderMonitorMachine = setup({
   },
   actors: {
     askForCardName: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, 'Which card are you willing to monitor on CardTrader?')),
+      input.port.sendMessage(input.chatId, 'Which card would you like to monitor on CardTrader?')),
     fetchPrintings: fromPromise(async ({ input }: { input: { useCase: ExactSearchRequestedUseCase, presenter: PrintingsSelectionPresenter, cardName: string } }) => {
       await input.useCase.execute({ cardName: input.cardName, market: 'cardtrader' })
       return input.presenter.state
@@ -138,7 +140,7 @@ export const addCardTraderMonitorMachine = setup({
       on: {
         message: {
           actions: assign({ cardName: ({ event }) => event.text }),
-          target: 'askingForPrintingsSelection',
+          target: 'fetchingPrintings',
         },
       },
     },
@@ -175,7 +177,6 @@ export const addCardTraderMonitorMachine = setup({
       },
     },
     awaitingForPrintingsSelection: {
-      entry: 'setPrintingsSelectionPresenterState',
       on: {
         buttonPress: [{
           guard: not('isPrintingsSubmission'),

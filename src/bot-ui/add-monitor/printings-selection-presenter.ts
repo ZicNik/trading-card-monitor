@@ -45,7 +45,7 @@ export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPo
 }
 
 function text(printings: PrintingsSelectionState['printings'], selection: boolean[]): string {
-  return 'Select the printings you would like to monitor.\n'
+  return 'Select from the following:\n'
     + printings.map((p, i) => `${selection[i] ? '✅' : '❌'} ${printingLabel(p)}`).join('\n')
 }
 
