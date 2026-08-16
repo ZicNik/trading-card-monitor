@@ -1,14 +1,16 @@
-import { type ActorSystemInfo } from 'xstate'
+import type { ActorSystemInfo } from 'xstate'
+import type { BotOutputPort } from './bot-output'
 
 /**
  * Container for system-wide, non-serializable dependencies. Ideal for services and other shared utilities.
  *
- * This is defined as empty by design. Client code must extend it and add the desired properties.
+ * Client code should extend it and add the application-specific dependencies.
  *
  * @see {@link https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation}.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface BotEnvironment {}
+export interface BotEnvironment {
+  outputPort: BotOutputPort
+}
 
 declare module 'xstate' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
