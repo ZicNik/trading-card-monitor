@@ -1,7 +1,7 @@
-import { ReplyKeyboard, type BotOutputPort } from '@/bot-ui/bot-output'
-import type { ExactSearchRequestedUseCase } from '@/search'
+import { ReplyKeyboard } from '@/bot-ui/bot-output'
+import { EditedMessage, Message } from '@/bot-ui/views'
 import { assign, fromPromise, not, setup } from 'xstate'
-import { PrintingsSelectionPresenter, printingsSubmissionPayload, type PrintingsSelectionState, type PrintingsSelectionViewModel } from '../printings-selection-presenter'
+import { printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
@@ -77,50 +77,34 @@ export const addCardTraderMonitorMachine = setup({
     } }),
   },
   actors: {
-    askForCardName: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, 'Which card would you like to monitor on CardTrader?')),
-    fetchPrintings: fromPromise(async ({ input }: { input: { useCase: ExactSearchRequestedUseCase, presenter: PrintingsSelectionPresenter, cardName: string } }) => {
-      await input.useCase.execute({ cardName: input.cardName, market: 'cardtrader' })
-      return input.presenter.state
+    askForCardName: Message.withText('Which card would you like to monitor on CardTrader?').toActor(),
+    fetchPrintings: fromPromise<PrintingsSelectionState, { cardName: string }>(async ({ input, system }) => {
+      await system.env.exactSearchRequestedUseCase.execute({ cardName: input.cardName, market: 'cardtrader' })
+      return system.env.printingsSelectionPresenter.state
     }),
-    showPrintingsFetchError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, 'Something went wrong. Try again: which card are you loooking for?')),
-    askForPrintingsSelection: fromPromise(async ({ input }: { input: { port: BotOutputPort, chatId: string, vm: PrintingsSelectionViewModel } }) =>
-      input.port.sendMessage(input.chatId, input.vm.text, input.vm.options)),
-    editPrintingsSelection: fromPromise(async ({ input }: {
-      input: {
-        port: BotOutputPort
-        chatId: string
-        messageId: string
-        vm: PrintingsSelectionViewModel
-        isSubmission: boolean
-      }
-    }) => {
-      await input.port.editMessage(input.chatId, input.messageId, input.vm.text, input.vm.options)
-      return { isSubmission: input.isSubmission }
-    }),
-    askForMaxPrice: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, 'What is the maximum price, in euros, you are willing to pay for this card?')),
-    showMaxPriceError: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, 'This is not a valid amount. Try again.')),
-    askForFoil: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, askForFoilMessage, {
-        keyboard: ReplyKeyboard.from([
-          [['Yes', foilYesPayload], ['No', foilNoPayload]],
-          ['Any'],
-        ]),
-      })),
-    submitFoil: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, messageId: string, foil: boolean | undefined } }) =>
-      input.port.editMessage(input.chatId, input.messageId, `${askForFoilMessage} *${toYesOrNoOrAny(input.foil)}*`, { formatting: 'markdown' })),
-    askForCtZero: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string } }) =>
-      input.port.sendMessage(input.chatId, askForCtZeroMessage, {
-        keyboard: ReplyKeyboard.from([
-          [['Yes', ctZeroYesPayload], ['No', ctZeroNoPayload]],
-          ['Any'],
-        ]),
-      })),
-    submitCtZero: fromPromise(({ input }: { input: { port: BotOutputPort, chatId: string, messageId: string, ctZero: boolean | undefined } }) =>
-      input.port.editMessage(input.chatId, input.messageId, `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' })),
+    showPrintingsFetchError: Message.withText('Something went wrong. Try again: which card are you loooking for?').toActor(),
+    askForPrintingsSelection: Message.withViewModel(({ env }) => env.printingsSelectionPresenter.vm).toActor(),
+    editPrintingsSelection: EditedMessage.withViewModel(({ env }) => env.printingsSelectionPresenter.vm).toActor(),
+    askForMaxPrice: Message.withText('What is the maximum price, in euros, you are willing to pay for this card?').toActor(),
+    showMaxPriceError: Message.withText('This is not a valid amount. Try again.').toActor(),
+    askForFoil: Message.withText(askForFoilMessage, {
+      keyboard: ReplyKeyboard.from([
+        [['Yes', foilYesPayload], ['No', foilNoPayload]],
+        ['Any'],
+      ]),
+    }).toActor(),
+    submitFoil: EditedMessage.withDynamicText((input: { foil: boolean | undefined }) =>
+      `${askForFoilMessage} *${toYesOrNoOrAny(input.foil)}*`, { formatting: 'markdown' },
+    ).toActor(),
+    askForCtZero: Message.withText(askForCtZeroMessage, {
+      keyboard: ReplyKeyboard.from([
+        [['Yes', ctZeroYesPayload], ['No', ctZeroNoPayload]],
+        ['Any'],
+      ]),
+    }).toActor(),
+    submitCtZero: EditedMessage.withDynamicText((input: { ctZero: boolean | undefined }) =>
+      `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' },
+    ).toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
@@ -129,7 +113,7 @@ export const addCardTraderMonitorMachine = setup({
     askingForCardName: {
       invoke: {
         src: 'askForCardName',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'awaitingForCardName',
       },
     },
@@ -144,11 +128,7 @@ export const addCardTraderMonitorMachine = setup({
     fetchingPrintings: {
       invoke: {
         src: 'fetchPrintings',
-        input: ({ context, self }) => ({
-          useCase: self.system.env.exactSearchRequestedUseCase,
-          presenter: self.system.env.printingsSelectionPresenter,
-          cardName: context.cardName!,
-        }),
+        input: ({ context }) => ({ cardName: context.cardName! }),
         onError: 'printingsFetchError',
         onDone: {
           target: 'askingForPrintingsSelection',
@@ -159,14 +139,14 @@ export const addCardTraderMonitorMachine = setup({
     printingsFetchError: {
       invoke: {
         src: 'showPrintingsFetchError',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'awaitingForCardName',
       },
     },
     askingForPrintingsSelection: {
       invoke: {
         src: 'askForPrintingsSelection',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId, vm: self.system.env.printingsSelectionPresenter.vm }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: {
           target: 'awaitingForPrintingsSelection',
           actions: assign({ messageId: ({ event }) => event.output.id }),
@@ -178,37 +158,32 @@ export const addCardTraderMonitorMachine = setup({
         buttonPress: [{
           guard: not('isPrintingsSubmission'),
           actions: 'togglePrinting',
-          target: 'editingPrintingsSelection',
+          target: 'togglingPrinting',
         }, {
           guard: 'isPrintingsSubmission',
           actions: 'submitPrintings',
-          target: 'editingPrintingsSelection',
+          target: 'submittingPrintings',
         }],
       },
     },
-    editingPrintingsSelection: {
+    togglingPrinting: {
       invoke: {
         src: 'editPrintingsSelection',
-        input: ({ context, self }) => ({
-          port: self.system.env.outputPort,
-          chatId: context.chatId,
-          messageId: context.messageId!,
-          vm: self.system.env.printingsSelectionPresenter.vm,
-          isSubmission: self.system.env.printingsSelectionPresenter.state.submitted,
-        }),
-        onDone: [{
-          guard: ({ event }) => !event.output.isSubmission,
-          target: 'awaitingForPrintingsSelection',
-        }, {
-          guard: ({ event }) => event.output.isSubmission,
-          target: 'askingForMaxPrice',
-        }],
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId! }),
+        onDone: 'awaitingForPrintingsSelection',
+      },
+    },
+    submittingPrintings: {
+      invoke: {
+        src: 'editPrintingsSelection',
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId! }),
+        onDone: 'askingForMaxPrice',
       },
     },
     askingForMaxPrice: {
       invoke: {
         src: 'askForMaxPrice',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'awaitingForMaxPrice',
       },
     },
@@ -227,14 +202,14 @@ export const addCardTraderMonitorMachine = setup({
     showingMaxPriceError: {
       invoke: {
         src: 'showMaxPriceError',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'awaitingForMaxPrice',
       },
     },
     askingForFoil: {
       invoke: {
         src: 'askForFoil',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: {
           target: 'awaitingForFoil',
           actions: assign({ messageId: ({ event }) => event.output.id }),
@@ -252,19 +227,14 @@ export const addCardTraderMonitorMachine = setup({
     submittingFoil: {
       invoke: {
         src: 'submitFoil',
-        input: ({ context, self }) => ({
-          port: self.system.env.outputPort,
-          chatId: context.chatId,
-          messageId: context.messageId!,
-          foil: context.foil,
-        }),
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId!, foil: context.foil }),
         onDone: 'askingForCtZero',
       },
     },
     askingForCtZero: {
       invoke: {
         src: 'askForCtZero',
-        input: ({ context, self }) => ({ port: self.system.env.outputPort, chatId: context.chatId }),
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: {
           target: 'awaitingForCtZero',
           actions: assign({ messageId: ({ event }) => event.output.id }),
@@ -282,12 +252,7 @@ export const addCardTraderMonitorMachine = setup({
     submittingCtZero: {
       invoke: {
         src: 'submitCtZero',
-        input: ({ context, self }) => ({
-          port: self.system.env.outputPort,
-          chatId: context.chatId,
-          messageId: context.messageId!,
-          ctZero: context.ctZero,
-        }),
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId!, ctZero: context.ctZero }),
         onDone: 'done',
       },
     },
