@@ -30,7 +30,7 @@ export class CardMonitor<M extends MarketType = MarketType> {
 
 /** Base filtering parameters. Listings that **don't** match them will be ignored. */
 export type MonitorBaseFilters = Readonly<{
-  printings: CardPrinting[]
+  printings: readonly CardPrinting[]
   maxEuroCents: number
   foil?: boolean
   // minCondition?: undefined

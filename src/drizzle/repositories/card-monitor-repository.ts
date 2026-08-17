@@ -148,7 +148,7 @@ function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCrea
   }
 }
 
-function monitoredPrintingsToInsert(monitorId: number, printings: CardPrinting[]): InsertMonitoredPrinting[] {
+function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardPrinting[]): InsertMonitoredPrinting[] {
   return printings.map(p => ({
     card_monitor_id: monitorId,
     set_code: p.setCode,
