@@ -9,11 +9,12 @@ export interface ActorView<A extends AnyActorLogic> {
 
 // MARK: - Message
 
-type MessageViewActorInput<Input> = { chatId: string } & Input
-type MessageViewModel = Readonly<{
+export type MessageViewModel = Readonly<{
   text: string
   options?: MessageOptions
 }>
+
+type MessageViewActorInput<Input> = { chatId: string } & Input
 
 /** View representing a new chat message. */
 export class Message<Input> implements ActorView<PromiseActorLogic<MessageInfo, MessageViewActorInput<Input>>> {
@@ -43,8 +44,8 @@ export class Message<Input> implements ActorView<PromiseActorLogic<MessageInfo, 
 
 // MARK: - EditedMessage
 
+export type EditedMessageViewModel = MessageViewModel
 type EditedMessageViewActorInput<Input> = { messageId: string } & MessageViewActorInput<Input>
-type EditedMessageViewModel = MessageViewModel
 
 /** View representing an edited chat message. */
 export class EditedMessage<Input> implements ActorView<PromiseActorLogic<void, EditedMessageViewActorInput<Input>>> {

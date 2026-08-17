@@ -1,18 +1,16 @@
 import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from '@/search'
-import { ReplyKeyboardButton, type MessageOptions, type ReplyKeyboard } from '../bot-output'
+import { ReplyKeyboardButton, type ReplyKeyboard } from '../bot-output'
+import type { MessageViewModel } from '../views'
 
 export const printingsSubmissionPayload = 'printings-submit'
-
-export type PrintingsSelectionViewModel = Readonly<{
-  text: string
-  options: MessageOptions
-}>
 
 export type PrintingsSelectionState = Readonly<{
   printings: ExactSearchRequestedOutput['printings']
   selection: readonly boolean[]
   submitted: boolean
 }>
+
+type PrintingsSelectionViewModel = MessageViewModel
 
 export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPort {
   state!: PrintingsSelectionState
