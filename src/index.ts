@@ -1,7 +1,6 @@
 import { CardTraderApis, CardTraderCardFetcher, CardTraderDbSynchronizer, CardTraderFiltersMatcher, CardTraderListingCatalog } from '@/cardtrader'
-import { CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
-import { DbUserRepository } from '@/drizzle'
-import { DbCardMonitorRepository } from '@/drizzle/repositories/card-monitor-repository'
+import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
+import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
@@ -36,13 +35,16 @@ const catalog = new CardCatalog({
   noMarketFetcher: scryfallCatalog,
   marketFetchers: { cardtrader: cardTraderCardFetcher },
 })
+const monitorRepository = new DbCardMonitorRepository()
 const userRepository = new DbUserRepository()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
+const addMonitorUseCase = new AddMonitorUseCase(new AddMonitorDoNothingOutputPort(), monitorRepository)
 const botUI = new BotUI(
   new RedisStateMachineStorage(),
   new GrammyInputPort(),
   new GrammyOutputPort(),
   userRegistrationUseCase,
+  addMonitorUseCase,
   catalog,
 )
 

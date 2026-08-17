@@ -1,9 +1,22 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { ReplyKeyboard } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
-import { assign, fromPromise, not, setup } from 'xstate'
+import type { AddMonitorInput } from '@/core'
+import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 import { printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
+
+export interface AddCardTraderMonitorMachineContext {
+  chatId: string
+  messageId?: string
+  cardName?: string
+  printingsSelection?: PrintingsSelectionState
+  maxPrice?: string
+  foil?: boolean
+  ctZero?: boolean
+}
 
 const askForFoilMessage = 'Do you want the card to be foil?'
 const foilYesPayload = 'foil-yes'
@@ -17,15 +30,7 @@ export const addCardTraderMonitorMachine = setup({
     input: {} as {
       chatId: string
     },
-    context: {} as {
-      chatId: string
-      messageId?: string
-      cardName?: string
-      printingsSelection?: PrintingsSelectionState
-      maxPrice?: string
-      foil?: boolean
-      ctZero?: boolean
-    },
+    context: {} as AddCardTraderMonitorMachineContext,
     events: {} as
     | { type: 'message', text: string }
     | { type: 'buttonPress', payload: string },
@@ -78,7 +83,7 @@ export const addCardTraderMonitorMachine = setup({
   },
   actors: {
     askForCardName: Message.withText('Which card would you like to monitor on CardTrader?').toActor(),
-    fetchPrintings: fromPromise<PrintingsSelectionState, { cardName: string }>(async ({ input, system }) => {
+    fetchPrintings: fromPromise(async ({ input, system }: { input: { cardName: string }, system: ActorSystem<ActorSystemInfo> }) => {
       await system.env.exactSearchRequestedUseCase.execute({ cardName: input.cardName, market: 'cardtrader' })
       return system.env.printingsSelectionPresenter.state
     }),
@@ -105,6 +110,10 @@ export const addCardTraderMonitorMachine = setup({
     submitCtZero: EditedMessage.withDynamicText((input: { ctZero: boolean | undefined }) =>
       `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' },
     ).toActor(),
+    addMonitor: fromPromise(({ input, system }: { input: AddMonitorInput, system: ActorSystem<ActorSystemInfo> }) =>
+      system.env.addMonitorUseCase.execute(input)),
+    showAddMonitorSuccess: Message.withText('Well done! The card monitor was successfully set.').toActor(),
+    showAddMonitorError: Message.withText('Oops... Something went wrong and the card monitor couldn\'t be correctly set. You can try again later.').toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
@@ -253,6 +262,28 @@ export const addCardTraderMonitorMachine = setup({
       invoke: {
         src: 'submitCtZero',
         input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId!, ctZero: context.ctZero }),
+        onDone: 'addingMonitor',
+      },
+    },
+    addingMonitor: {
+      invoke: {
+        src: 'addMonitor',
+        input: ({ context }) => toAddMonitorInput(context),
+        onDone: 'showingAddMonitorSuccess',
+        onError: 'showingAddMonitorError',
+      },
+    },
+    showingAddMonitorSuccess: {
+      invoke: {
+        src: 'showAddMonitorSuccess',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: 'done',
+      },
+    },
+    showingAddMonitorError: {
+      invoke: {
+        src: 'showAddMonitorError',
+        input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'done',
       },
     },
@@ -268,5 +299,22 @@ function toYesOrNoOrAny(b: boolean | undefined): string {
       return 'No'
     case undefined:
       return 'Any'
+  }
+}
+
+function toAddMonitorInput(context: AddCardTraderMonitorMachineContext): AddMonitorInput {
+  return {
+    userId: context.chatId,
+    cardName: context.cardName!,
+    baseFilters: {
+      printings: context.printingsSelection!.printings.filter((_, i) =>
+        context.printingsSelection!.selection[i]),
+      maxEuroCents: parseInt(context.maxPrice!),
+      ...(context.foil !== undefined ? { foil: context.foil } : {}),
+    },
+    marketFilters: {
+      market: 'cardtrader',
+      ...(context.ctZero !== undefined ? { ctZero: context.ctZero } : {}),
+    },
   }
 }

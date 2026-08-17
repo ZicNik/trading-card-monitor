@@ -1,3 +1,4 @@
+import type { AddMonitorUseCase } from '@/core'
 import { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, type CardCatalog } from '@/search'
 import type { UserRegistrationUseCase } from '@/user'
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
@@ -14,6 +15,7 @@ export class BotUI {
     private readonly inputPort: BotInputPort,
     private readonly outputPort: BotOutputPort,
     private readonly userRegistrationUseCase: UserRegistrationUseCase,
+    private readonly addMonitorUseCase: AddMonitorUseCase,
     private readonly cardCatalog: CardCatalog,
   ) {}
 
@@ -43,6 +45,7 @@ export class BotUI {
     // Initialize the actor system's environment
     actor.system.env = {
       outputPort: this.outputPort,
+      addMonitorUseCase: this.addMonitorUseCase,
       fuzzySearchRequestedUseCase,
       fuzzySearchPresenter,
       printingsSelectionPresenter,
