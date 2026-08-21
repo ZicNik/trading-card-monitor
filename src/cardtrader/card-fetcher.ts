@@ -1,4 +1,4 @@
-import type { Card } from '@/core'
+import { Card, CardPrinting } from '@/core'
 import { DRIZZLE_DB } from '@/drizzle/db'
 import { cardtraderBlueprintsTable, cardtraderSetsTable } from '@/drizzle/schema'
 import type { CardFetcher } from '@/search'
@@ -6,7 +6,7 @@ import { eq } from 'drizzle-orm'
 
 export class CardTraderCardFetcher implements CardFetcher {
   async getCard(name: string): Promise<Card | undefined> {
-    const printings = await DRIZZLE_DB
+    const dbPrintings = await DRIZZLE_DB
       .select({
         setCode: cardtraderSetsTable.code,
         collectorNum: cardtraderBlueprintsTable.coll_num,
@@ -14,6 +14,8 @@ export class CardTraderCardFetcher implements CardFetcher {
       .from(cardtraderBlueprintsTable)
       .where(eq(cardtraderBlueprintsTable.name, name))
       .innerJoin(cardtraderSetsTable, eq(cardtraderBlueprintsTable.expansion_id, cardtraderSetsTable.id))
-    return printings.length === 0 ? undefined : { name, printings }
+    return dbPrintings.length === 0
+      ? undefined
+      : new Card({ name, printings: dbPrintings.map(p => new CardPrinting(p)) })
   }
 }

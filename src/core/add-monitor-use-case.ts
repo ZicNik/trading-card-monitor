@@ -1,11 +1,11 @@
-import type { CardMonitorRepository, MonitorBaseFilters } from './card-monitor'
-import type { MonitorMarketFilters } from './market'
+import type { CardMonitorRepository, MonitorBaseFiltersProps } from './card-monitor'
+import type { MonitorMarketFiltersProps } from './market'
 
 export type AddMonitorInput = Readonly<{
   userId: string
   cardName: string
-  baseFilters: MonitorBaseFilters
-  marketFilters: MonitorMarketFilters
+  baseFilters: MonitorBaseFiltersProps
+  marketFilters: MonitorMarketFiltersProps
 }>
 
 export type AddMonitorOutput = Readonly<{ id: number }>

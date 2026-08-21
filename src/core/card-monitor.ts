@@ -1,6 +1,7 @@
-import { CardPrinting } from './card'
-import type { CardListing } from './card-listing'
-import type { MarketType, MonitorMarketFilters } from './market'
+import { ValueObject } from '@/common/utilities'
+import { CardPrinting, type CardPrintingProps } from './card'
+import type { CardListing, ListingBaseAttributes } from './card-listing'
+import type { MarketType, MonitorMarketFilters, MonitorMarketFiltersProps } from './market'
 
 /** A card to be monitored according to a set of parameters. */
 export class CardMonitor<M extends MarketType = MarketType> {
@@ -12,25 +13,37 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public marketFilters: MonitorMarketFilters<M>,
   ) {}
 
-  match(listings: CardListing[], marketMatcher: MarketFiltersMatcher): CardMonitorMatch[] {
+  match(listings: CardListing[]): CardMonitorMatch[] {
     return listings
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       .filter(listing => listing.marketDetails.market === this.marketFilters.market
-        && this.matchBase(listing)
-        && marketMatcher.match(listing, this.marketFilters))
+        && this.baseFilters.isMatchedBy(listing.baseAttributes)
+        && this.marketFilters.isMatchedBy(listing.marketDetails))
       .map(listing => ({ monitorId: this.id, listingId: listing.id }))
-  }
-
-  private readonly matchBase = (listing: CardListing): boolean => {
-    return this.baseFilters.printings.some(p => CardPrinting.equals(p, listing.baseAttributes.printing))
-      && listing.baseAttributes.euroCents <= this.baseFilters.maxEuroCents
-      && (this.baseFilters.foil === undefined || listing.baseAttributes.foil === this.baseFilters.foil)
   }
 }
 
 /** Base filtering parameters. Listings that **don't** match them will be ignored. */
-export type MonitorBaseFilters = Readonly<{
-  printings: readonly CardPrinting[]
+export class MonitorBaseFilters extends ValueObject<MonitorBaseFiltersProps> {
+  readonly printings: readonly CardPrinting[]
+  get maxEuroCents() { return this.props.maxEuroCents }
+  get foil() { return this.props.foil }
+
+  constructor(props: MonitorBaseFiltersProps) {
+    super(props)
+    this.printings = props.printings.map(p => new CardPrinting(p))
+  }
+
+  isMatchedBy(attributes: ListingBaseAttributes): boolean {
+    return this.printings.some(p => p.isEqual(attributes.printing))
+      && attributes.euroCents <= this.maxEuroCents
+      && (this.foil === undefined || attributes.foil === this.foil)
+  }
+}
+
+/** @see {@link MonitorBaseFilters} */
+export type MonitorBaseFiltersProps = Readonly<{
+  printings: readonly CardPrintingProps[]
   maxEuroCents: number
   foil?: boolean
   // minCondition?: undefined
@@ -66,8 +79,8 @@ export class MarketFiltersMatcher {
 export type CardMonitorCreationArgs<M extends MarketType = MarketType> = Readonly<{
   userId: string
   cardName: string
-  baseFilters: MonitorBaseFilters
-  marketFilters: MonitorMarketFilters<M>
+  baseFilters: MonitorBaseFiltersProps
+  marketFilters: MonitorMarketFiltersProps<M>
 }>
 
 export interface CardMonitorRepository {

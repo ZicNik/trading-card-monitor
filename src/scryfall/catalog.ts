@@ -1,4 +1,4 @@
-import type { Card } from '@/core'
+import { Card, CardPrinting } from '@/core'
 import type { CardFetcher, CardFuzzySearcher, CardPrototype } from '@/search'
 import { ScryfallApis } from './apis'
 import type { ScryfallCard } from './types'
@@ -69,11 +69,11 @@ function toCard(prints: ScryfallCard[]): Card | undefined {
   const name = prints[0]?.name
   if (name === undefined)
     return undefined
-  return {
+  return new Card({
     name,
-    printings: prints.map(p => ({
+    printings: prints.map(p => new CardPrinting({
       setCode: p.set,
       collectorNum: p.collector_number,
     })),
-  }
+  })
 }

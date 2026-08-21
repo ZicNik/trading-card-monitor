@@ -1,3 +1,6 @@
+import { ValueObject } from '@/common/utilities'
+import { registerMarketFactory } from '@/core'
+
 const CT_MARKET_ID = 'cardtrader'
 
 declare module '@/core' {
@@ -5,6 +8,7 @@ declare module '@/core' {
     [CT_MARKET_ID]: {
       listingAttributes: CardTraderListingAttributes
       monitorFilters: CardTraderMonitorFilters
+      monitorFiltersProps: CardTraderMonitorFiltersProps
     }
   }
 }
@@ -14,10 +18,21 @@ export type CardTraderListingAttributes = Readonly<{
   ctZero: boolean
 }>
 
-export type CardTraderMonitorFilters = Readonly<{
+export class CardTraderMonitorFilters extends ValueObject<CardTraderMonitorFiltersProps> {
+  get market() { return this.props.market }
+  get ctZero() { return this.props.ctZero }
+
+  isMatchedBy(attributes: CardTraderListingAttributes): boolean {
+    return (this.ctZero === undefined || attributes.ctZero === this.ctZero)
+  }
+}
+
+export type CardTraderMonitorFiltersProps = Readonly<{
   market: typeof CT_MARKET_ID
   ctZero?: boolean
 }>
+
+registerMarketFactory('cardtrader', 'monitorFilters', props => new CardTraderMonitorFilters(props))
 
 // MARK: - External types
 

@@ -1,4 +1,5 @@
-import { CardMonitor, type CardMonitorCreationArgs, type CardMonitorRepository, type CardPrinting, type MarketType, type MonitorMarketFilters } from '@/core'
+import { CardTraderMonitorFilters, type CardTraderMonitorFiltersProps } from '@/cardtrader'
+import { CardMonitor, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorCreationArgs, type CardMonitorRepository, type CardPrintingProps, type MarketType } from '@/core'
 import { eq, inArray } from 'drizzle-orm'
 import { DRIZZLE_DB } from '../db'
 import { cardMonitorsTable, cardtraderMonitorFiltersTable, monitoredPrintingsTable } from '../schema'
@@ -111,18 +112,18 @@ function selectToCardTraderCardMonitor(
         monitor.id,
         monitor.user_id,
         monitor.card_name,
-        {
+        new MonitorBaseFilters({
           maxEuroCents: monitor.max_euro_cents,
           printings: printings.map(p => ({
             setCode: p.set_code,
             collectorNum: p.coll_num,
           })),
           ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
-        },
-        {
+        }),
+        new CardTraderMonitorFilters({
           market: 'cardtrader',
           ...(filters.ct_zero !== null ? { ctZero: fromDbBoolean(filters.ct_zero) } : {}),
-        },
+        }),
       )
     : undefined
 }
@@ -132,8 +133,8 @@ function createToCardMonitor<T extends MarketType = MarketType>(id: number, args
     id,
     args.userId,
     args.cardName,
-    args.baseFilters,
-    args.marketFilters,
+    new MonitorBaseFilters(args.baseFilters),
+    MonitorMarketFilters.create(args.marketFilters),
   )
 }
 
@@ -148,7 +149,7 @@ function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCrea
   }
 }
 
-function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardPrinting[]): InsertMonitoredPrinting[] {
+function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardPrintingProps[]): InsertMonitoredPrinting[] {
   return printings.map(p => ({
     card_monitor_id: monitorId,
     set_code: p.setCode,
@@ -156,7 +157,7 @@ function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardP
   }))
 }
 
-function cardtraderFiltersToInsert(monitorId: number, filters: MonitorMarketFilters<'cardtrader'>): InsertCardTraderMonitorFilter {
+function cardtraderFiltersToInsert(monitorId: number, filters: CardTraderMonitorFiltersProps): InsertCardTraderMonitorFilter {
   return {
     card_monitor_id: monitorId,
     ...(filters.ctZero !== undefined ? { ct_zero: toDbBoolean(filters.ctZero) } : {}),

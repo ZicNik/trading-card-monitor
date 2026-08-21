@@ -1,4 +1,4 @@
-import { CardListing, type CardListingCatalog } from '@/core'
+import { CardListing, CardPrinting, type CardListingCatalog } from '@/core'
 import { DRIZZLE_DB } from '@/drizzle/db'
 import { cardtraderBlueprintsTable } from '@/drizzle/schema'
 import { eq } from 'drizzle-orm'
@@ -26,10 +26,10 @@ function toCardListing(product: CardTraderProduct): CardListing<'cardtrader'> {
     {
       euroCents: product.price.cents,
       foil: product.properties_hash.mtg_foil,
-      printing: {
+      printing: new CardPrinting({
         setCode: product.expansion.code,
         collectorNum: product.properties_hash.collector_number,
-      },
+      }),
     },
     {
       market: 'cardtrader',

@@ -1,5 +1,5 @@
-import { CardTraderApis, CardTraderCardFetcher, CardTraderDbSynchronizer, CardTraderFiltersMatcher, CardTraderListingCatalog } from '@/cardtrader'
-import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, MarketFiltersMatcher, type CardMonitorRepository } from '@/core'
+import { CardTraderApis, CardTraderCardFetcher, CardTraderDbSynchronizer, CardTraderListingCatalog } from '@/cardtrader'
+import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { RedisStateMachineStorage } from '@/redis'
@@ -143,23 +143,23 @@ function testCardMonitorMatches() {
     0,
     'user1',
     'Black Lotus',
-    {
+    new MonitorBaseFilters({
       maxEuroCents: 1000,
       printings: [
         { setCode: 'LEA', collectorNum: '233' },
         { setCode: 'LEB', collectorNum: '233' },
       ],
-    },
-    {
+    }),
+    MonitorMarketFilters.create({
       market: 'cardtrader',
       ctZero: true,
-    },
+    }),
   )
   const l1 = new CardListing(1, 'Black Lotus',
     {
       euroCents: 1500,
       foil: false,
-      printing: { setCode: 'LEA', collectorNum: '233' },
+      printing: new CardPrinting({ setCode: 'LEA', collectorNum: '233' }),
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -167,7 +167,7 @@ function testCardMonitorMatches() {
     {
       euroCents: 1,
       foil: true,
-      printing: { setCode: 'LEA', collectorNum: '100' },
+      printing: new CardPrinting({ setCode: 'LEA', collectorNum: '100' }),
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -175,12 +175,11 @@ function testCardMonitorMatches() {
     {
       euroCents: 1000,
       foil: false,
-      printing: { setCode: 'LEB', collectorNum: '233' },
+      printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const matcher = new MarketFiltersMatcher({ cardtrader: new CardTraderFiltersMatcher() })
-  const matches = monitor.match([l1, l2, l3], matcher)
+  const matches = monitor.match([l1, l2, l3])
   console.log(matches)
 }
 
