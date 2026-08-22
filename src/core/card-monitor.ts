@@ -56,24 +56,6 @@ export type CardMonitorMatch = Readonly<{
   listingId: number
 }>
 
-// MARK: - Market Filters Evaluator
-
-/** Evaluates if a listing matches some market filters, for a concrete market. */
-export interface SingleMarketFiltersMatcher<M extends MarketType> {
-  match(listing: CardListing<M>, filters: MonitorMarketFilters<M>): boolean
-}
-
-type MatchersMap = { [M in MarketType]: SingleMarketFiltersMatcher<M> }
-
-/** Evaluates if a listing matches some market filters, for all markets. */
-export class MarketFiltersMatcher {
-  constructor(private readonly matchers: MatchersMap) {}
-
-  match<M extends MarketType>(listing: CardListing<M>, filters: MonitorMarketFilters<M>): boolean {
-    return (this.matchers[filters.market] as SingleMarketFiltersMatcher<M>).match(listing, filters)
-  }
-}
-
 // MARK: - Repository
 
 export type CardMonitorCreationArgs<M extends MarketType = MarketType> = Readonly<{
