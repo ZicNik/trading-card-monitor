@@ -6,6 +6,7 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
 import { UserRegistrationUseCase } from '@/user'
+import assert from 'node:assert'
 import { BotUI } from './bot-ui/bot-ui'
 
 // class TestUserRepository implements UserRepository {
@@ -179,8 +180,26 @@ function testCardMonitorMatches() {
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const matches = monitor.match([l1, l2, l3])
+  const l4 = new CardListing(4, 'Black Lotus',
+    {
+      euroCents: 1000,
+      foil: true,
+      printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
+    },
+    { market: 'cardtrader', ctZero: true },
+  )
+  const l5 = new CardListing(5, 'Black Lotus',
+    {
+      euroCents: 1000,
+      foil: true,
+      printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
+    },
+    { market: 'cardtrader', ctZero: false },
+  )
+  const matches = monitor.match([l1, l2, l3, l4, l5])
   console.log(matches)
+  const matchedIds = matches.map(m => m.listingId)
+  assert(matches.length === 2 && matchedIds.includes(l3.id) && matchedIds.includes(l4.id))
 }
 
 // testCardMonitorMatches()
