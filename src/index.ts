@@ -1,13 +1,15 @@
-import { CardTraderApis, CardTraderCardFetcher, CardTraderDbSynchronizer, CardTraderListingCatalog } from '@/cardtrader'
+import { BotUI } from '@/bot-ui/bot-ui'
+import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
+import { CardTraderDbSynchronizer, startCardTraderDbSynchronization } from '@/jobs'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
 import { UserRegistrationUseCase } from '@/user'
+
 import assert from 'node:assert'
-import { BotUI } from './bot-ui/bot-ui'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -30,6 +32,7 @@ import { BotUI } from './bot-ui/bot-ui'
 // Compose dependencies
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const scryfallCatalog = new ScryfallCatalog(scryfallApis)
+const cardTraderApis = new CardTraderApis()
 const cardTraderCardFetcher = new CardTraderCardFetcher()
 const catalog = new CardCatalog({
   fuzzySearcher: scryfallCatalog,
@@ -49,11 +52,8 @@ const botUI = new BotUI(
   catalog,
 )
 
-function testBotUI() {
-  botUI.start()
-}
-
-// testBotUI()
+// startCardTraderDbSynchronization({ apis: cardTraderApis })
+// botUI.start()
 
 async function testCardCatalog() {
   const prototype = await catalog.fuzzySearch('subtle')
@@ -69,7 +69,6 @@ async function testCardCatalog() {
 // testCardCatalog().catch(console.error)
 
 async function testCardTraderApis() {
-  const cardTraderApis = new CardTraderApis({ timeoutMs: 7000, retries: 3 })
   const expansions = await cardTraderApis.expansions()
   console.log(expansions)
   const expansionId = expansions?.[0]?.id
@@ -129,9 +128,8 @@ async function testCardMonitorRepository() {
 // testCardMonitorRepository().catch(console.error)
 
 async function testCardTraderListingCatalog() {
-  const apis = new CardTraderApis()
-  const synchronizer = new CardTraderDbSynchronizer({ apis })
-  const catalog = new CardTraderListingCatalog(apis)
+  const synchronizer = new CardTraderDbSynchronizer({ apis: cardTraderApis })
+  const catalog = new CardTraderListingCatalog(cardTraderApis)
   await synchronizer.syncSetsAndBlueprints()
   const listings = await catalog.findByCardName('Moonshadow')
   console.log(listings)

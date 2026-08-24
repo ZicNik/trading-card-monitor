@@ -1,5 +1,4 @@
 export * from './apis'
 export * from './card-fetcher'
 export * from './card-listing-catalog'
-export * from './db-synchronizer'
 export * from './types'
