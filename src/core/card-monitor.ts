@@ -13,13 +13,12 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public marketFilters: MonitorMarketFilters<M>,
   ) {}
 
-  match(listings: CardListing[]): CardMonitorMatch[] {
+  match(listings: CardListing[]): CardMonitorMatch<M>[] {
     return listings
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      .filter(listing => listing.marketDetails.market === this.marketFilters.market
-        && this.baseFilters.isMatchedBy(listing.baseAttributes)
-        && this.marketFilters.isMatchedBy(listing.marketDetails))
-      .map(listing => ({ monitorId: this.id, listingId: listing.id }))
+      .filter((listing): listing is CardListing<M> =>
+        this.marketFilters.isMatchedBy(listing.marketDetails)
+        && this.baseFilters.isMatchedBy(listing.baseAttributes))
+      .map(listing => ({ monitor: this, listing }))
   }
 }
 
@@ -51,9 +50,9 @@ export type MonitorBaseFiltersProps = Readonly<{
   // sellerCountry?: string
 }>
 
-export type CardMonitorMatch = Readonly<{
-  monitorId: number
-  listingId: number
+export type CardMonitorMatch<M extends MarketType = MarketType> = Readonly<{
+  monitor: CardMonitor<M>
+  listing: CardListing<M>
 }>
 
 // MARK: - Repository

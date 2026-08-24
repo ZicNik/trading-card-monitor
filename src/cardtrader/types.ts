@@ -1,5 +1,5 @@
 import { ValueObject } from '@/common/utilities'
-import { registerMarketFactory } from '@/core'
+import { registerMarketFactory, type ListingMarketAttributes } from '@/core'
 
 const CT_MARKET_ID = 'cardtrader'
 
@@ -22,8 +22,10 @@ export class CardTraderMonitorFilters extends ValueObject<CardTraderMonitorFilte
   get market() { return this.props.market }
   get ctZero() { return this.props.ctZero }
 
-  isMatchedBy(attributes: CardTraderListingAttributes): boolean {
-    return (this.ctZero === undefined || attributes.ctZero === this.ctZero)
+  isMatchedBy(attributes: ListingMarketAttributes): boolean {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return attributes.market === this.market
+      && (this.ctZero === undefined || attributes.ctZero === this.ctZero)
   }
 }
 
