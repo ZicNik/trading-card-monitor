@@ -47,7 +47,7 @@
     "redis:status": "valkey-cli -p 6380 ping"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true,
-    "fsevents@2.3.3": true
+    "fsevents@2.3.3": true,
+    "esbuild@0.28.2": true
   }
 }
