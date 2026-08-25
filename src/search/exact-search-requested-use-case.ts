@@ -21,7 +21,7 @@ export class ExactSearchRequestedUseCase {
     private readonly catalog: CardCatalog,
   ) {}
 
-  async execute(input: ExactSearchRequestedInput) {
+  async execute(input: ExactSearchRequestedInput): Promise<void> {
     const card = await this.catalog.getCard(input.cardName, input.market)
     if (card === undefined)
       throw new Error(`Exact search of ${input.cardName} for ${input.market} market produced no result`)
