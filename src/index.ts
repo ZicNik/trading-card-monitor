@@ -196,10 +196,9 @@ function testCardMonitorMatches() {
     },
     { market: 'cardtrader', ctZero: false },
   )
-  const matchedIds = monitor.match([l1, l2, l3, l4, l5])
-    .map(m => m.listing.id).sort()
+  const matchedIds = monitor.match([l1, l2, l3, l4, l5])?.listingIds
   const expectedIds = [3, 4] as const
-  assert(matchedIds.every((id, index) => id === expectedIds[index]))
+  assert(matchedIds?.every((id, index) => id === expectedIds[index]))
 }
 
 // testCardMonitorMatches()

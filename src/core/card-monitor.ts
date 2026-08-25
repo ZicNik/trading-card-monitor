@@ -13,12 +13,15 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public marketFilters: MonitorMarketFilters<M>,
   ) {}
 
-  match(listings: CardListing[]): CardMonitorMatch<M>[] {
-    return listings
-      .filter((listing): listing is CardListing<M> =>
+  /** @return A `CardMonitorMatched` event if matches were found; `undefined` otherwise. */
+  match(listings: CardListing[]): CardMonitorMatched | undefined {
+    const matches = listings
+      .filter(listing =>
         this.marketFilters.isMatchedBy(listing.marketDetails)
         && this.baseFilters.isMatchedBy(listing.baseAttributes))
-      .map(listing => ({ monitor: this, listing }))
+    return matches.length !== 0
+      ? new CardMonitorMatched(this.id, matches.map(l => l.id))
+      : undefined
   }
 }
 
@@ -50,10 +53,18 @@ export type MonitorBaseFiltersProps = Readonly<{
   // sellerCountry?: string
 }>
 
-export type CardMonitorMatch<M extends MarketType = MarketType> = Readonly<{
-  monitor: CardMonitor<M>
-  listing: CardListing<M>
-}>
+/** Event representing that matches were found between a card monitor and *at least one* listing. */
+export class CardMonitorMatched {
+  readonly type = 'cardMonitorMatched'
+
+  constructor(
+    readonly monitorId: number,
+    readonly listingIds: readonly number[],
+  ) {
+    if (this.listingIds.length === 0)
+      throw new Error(`CardMonitorMatched with empty listings is not allowed (monitor id: ${this.monitorId})`)
+  }
+}
 
 // MARK: - Repository
 
