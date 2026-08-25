@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 import { assign, fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 import { Message } from '../views'
 

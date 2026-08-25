@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { BotUI } from '@/bot-ui/bot-ui'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
