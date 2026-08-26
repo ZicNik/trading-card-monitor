@@ -1,10 +1,15 @@
 import { ValueObject } from '@/common/utilities'
+
 import { CardPrinting, type CardPrintingProps } from './card'
 import type { CardListing, ListingBaseAttributes } from './card-listing'
+import type { DomainEvent } from './domain-event'
 import type { MarketType, MonitorMarketFilters, MonitorMarketFiltersProps } from './market'
 
 /** A card to be monitored according to a set of parameters. */
 export class CardMonitor<M extends MarketType = MarketType> {
+  private _events: DomainEvent[] = []
+  get events() { return [...this._events] as const }
+
   constructor(
     public readonly id: number,
     public readonly userId: string,
@@ -13,15 +18,18 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public marketFilters: MonitorMarketFilters<M>,
   ) {}
 
-  /** @return A `CardMonitorMatched` event if matches were found; `undefined` otherwise. */
-  match(listings: CardListing[]): CardMonitorMatched | undefined {
+  /** Adds a {@link CardMonitorMatched} event if matching listings are found. */
+  match(listings: CardListing[]): void {
     const matches = listings
       .filter(listing =>
         this.marketFilters.isMatchedBy(listing.marketDetails)
         && this.baseFilters.isMatchedBy(listing.baseAttributes))
-    return matches.length !== 0
-      ? new CardMonitorMatched(this.id, matches.map(l => l.id))
-      : undefined
+    if (matches.length !== 0)
+      this._events.push(new CardMonitorMatched(this.id, matches.map(l => l.id)))
+  }
+
+  clearEvents(): void {
+    this._events = []
   }
 }
 

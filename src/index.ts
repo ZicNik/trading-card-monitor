@@ -2,7 +2,7 @@
 
 import { BotUI } from '@/bot-ui/bot-ui'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
-import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
+import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
 import { CardTraderDbSynchronizer, startCardTraderDbSynchronization } from '@/jobs'
@@ -196,9 +196,10 @@ function testCardMonitorMatches() {
     },
     { market: 'cardtrader', ctZero: false },
   )
-  const matchedIds = monitor.match([l1, l2, l3, l4, l5])?.listingIds
+  monitor.match([l1, l2, l3, l4, l5])
+  const matchedIds = (monitor.events[0] as CardMonitorMatched).listingIds
   const expectedIds = [3, 4] as const
-  assert(matchedIds?.every((id, index) => id === expectedIds[index]))
+  assert(matchedIds.every((id, index) => id === expectedIds[index]))
 }
 
 // testCardMonitorMatches()
