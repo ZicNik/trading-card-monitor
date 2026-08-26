@@ -12,5 +12,5 @@ export type DomainEventType = keyof DomainEventRegistry
 export type DomainEvent<T extends DomainEventType = DomainEventType> = { readonly type: T } & DomainEventRegistry[T]
 
 export interface DomainEventPublisher {
-  publish<T extends DomainEventType>(event: DomainEvent<T>): void
+  publish<T extends DomainEventType>(...events: DomainEvent<T>[]): Promise<void>
 }
