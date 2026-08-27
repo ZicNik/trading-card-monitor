@@ -4,8 +4,9 @@ import { BotUI } from '@/bot-ui/bot-ui'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
+import { EventBus } from '@/event-bus'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
-import { CardTraderDbSynchronizer, startCardTraderDbSynchronization } from '@/jobs'
+import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarketScanning } from '@/jobs'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
@@ -32,15 +33,17 @@ import assert from 'node:assert'
 // }
 
 // Compose dependencies
+const eventBus = new EventBus()
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const scryfallCatalog = new ScryfallCatalog(scryfallApis)
 const cardTraderApis = new CardTraderApis()
 const cardTraderCardFetcher = new CardTraderCardFetcher()
-const catalog = new CardCatalog({
+const cardCatalog = new CardCatalog({
   fuzzySearcher: scryfallCatalog,
   noMarketFetcher: scryfallCatalog,
   marketFetchers: { cardtrader: cardTraderCardFetcher },
 })
+const listingCatalog = new CardTraderListingCatalog(cardTraderApis)
 const monitorRepository = new DbCardMonitorRepository()
 const userRepository = new DbUserRepository()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
@@ -51,19 +54,26 @@ const botUI = new BotUI(
   new GrammyOutputPort(),
   userRegistrationUseCase,
   addMonitorUseCase,
-  catalog,
+  cardCatalog,
 )
 
+// Start cron jobs
 // startCardTraderDbSynchronization({ apis: cardTraderApis })
+// startMarketScanning({
+//   cardMonitorRepo: monitorRepository,
+//   cardListingCatalog: listingCatalog,
+//   publisher: eventBus,
+// })
+
 // botUI.start()
 
 async function testCardCatalog() {
-  const prototype = await catalog.fuzzySearch('subtle')
+  const prototype = await cardCatalog.fuzzySearch('subtle')
   console.log(prototype)
   if (prototype === undefined)
     return
-  const noMarketCard = await catalog.getCard(prototype.name)
-  const cardTraderCard = await catalog.getCard(prototype.name, 'cardtrader')
+  const noMarketCard = await cardCatalog.getCard(prototype.name)
+  const cardTraderCard = await cardCatalog.getCard(prototype.name, 'cardtrader')
   console.log(noMarketCard)
   console.log(cardTraderCard)
 }
