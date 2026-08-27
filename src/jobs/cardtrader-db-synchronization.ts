@@ -17,7 +17,7 @@ export function startCardTraderDbSynchronization(
     apis: dependencies.apis,
     ...(config !== undefined ? { config } : {}),
   })
-  const task = nodeCron.schedule('@weekly', async () => {
+  const task = nodeCron.schedule('5 0 3-31/3 * *', async () => {
     console.log('Synchronizing CardTrader sets and blueprints')
     await synchonizer.syncSetsAndBlueprints()
   })
