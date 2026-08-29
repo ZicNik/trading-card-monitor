@@ -13,23 +13,26 @@ export class CardTraderListingCatalog implements CardListingCatalog {
       .from(cardtraderBlueprintsTable)
       .where(eq(cardtraderBlueprintsTable.name, name))
     return (await Promise.all(blueprints.map(async b => [b.id, await this.apis.marketplaceProducts({ blueprint_id: b.id })] as const)))
-      .flatMap(([id, products]) => products?.[id]?.map(toCardListing) ?? [])
+      .flatMap(([id, products]) => products?.[id]?.map(p => toCardListing(name, p)) ?? [])
   }
 }
 
 // MARK: - Mappers
 
-function toCardListing(product: CardTraderProduct): CardListing<'cardtrader'> {
+const baseUrl = 'https://www.cardtrader.com/cards'
+
+function toCardListing(cardName: string, product: CardTraderProduct): CardListing<'cardtrader'> {
   return new CardListing(
     product.id,
-    product.blueprint_id.toString(),
     {
+      name: cardName,
       euroCents: product.price.cents,
       foil: product.properties_hash.mtg_foil,
       printing: new CardPrinting({
         setCode: product.expansion.code,
         collectorNum: product.properties_hash.collector_number,
       }),
+      url: `${baseUrl}/${product.blueprint_id}`,
     },
     {
       market: 'cardtrader',

@@ -165,43 +165,53 @@ function testCardMonitorMatches() {
       ctZero: true,
     }),
   )
-  const l1 = new CardListing(1, 'Black Lotus',
+  const l1 = new CardListing(1,
     {
+      name: 'Black Lotus',
       euroCents: 1500,
       foil: false,
       printing: new CardPrinting({ setCode: 'LEA', collectorNum: '233' }),
+      url: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const l2 = new CardListing(2, 'Lightning Bolt',
+  const l2 = new CardListing(2,
     {
+      name: 'Lightning Bolt',
       euroCents: 1,
       foil: true,
       printing: new CardPrinting({ setCode: 'LEA', collectorNum: '100' }),
+      url: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const l3 = new CardListing(3, 'Black Lotus',
+  const l3 = new CardListing(3,
     {
+      name: 'Black Lotus',
       euroCents: 1000,
       foil: false,
       printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
+      url: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const l4 = new CardListing(4, 'Black Lotus',
+  const l4 = new CardListing(4,
     {
+      name: 'Black Lotus',
       euroCents: 1000,
       foil: true,
       printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
+      url: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
-  const l5 = new CardListing(5, 'Black Lotus',
+  const l5 = new CardListing(5,
     {
+      name: 'Black Lotus',
       euroCents: 1000,
       foil: true,
       printing: new CardPrinting({ setCode: 'LEB', collectorNum: '233' }),
+      url: '',
     },
     { market: 'cardtrader', ctZero: false },
   )
