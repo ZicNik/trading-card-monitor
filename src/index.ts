@@ -216,7 +216,7 @@ function testCardMonitorMatches() {
     { market: 'cardtrader', ctZero: false },
   )
   monitor.match([l1, l2, l3, l4, l5])
-  const matchedIds = (monitor.events[0] as CardMonitorMatched).listingIds
+  const matchedIds = (monitor.events[0] as CardMonitorMatched).listings.map(l => l.id)
   const expectedIds = [3, 4] as const
   assert(matchedIds.every((id, index) => id === expectedIds[index]))
 }

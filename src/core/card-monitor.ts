@@ -25,7 +25,7 @@ export class CardMonitor<M extends MarketType = MarketType> {
         this.marketFilters.isMatchedBy(listing.marketDetails)
         && this.baseFilters.isMatchedBy(listing.baseAttributes))
     if (matches.length !== 0)
-      this._events.push(new CardMonitorMatched(this.id, matches.map(l => l.id)))
+      this._events.push(new CardMonitorMatched(this.id, matches))
   }
 
   clearEvents(): void {
@@ -67,9 +67,9 @@ export class CardMonitorMatched {
 
   constructor(
     readonly monitorId: number,
-    readonly listingIds: readonly number[],
+    readonly listings: readonly CardListing[],
   ) {
-    if (this.listingIds.length === 0)
+    if (this.listings.length === 0)
       throw new Error(`CardMonitorMatched with empty listings is not allowed (monitor id: ${this.monitorId})`)
   }
 }
