@@ -1,5 +1,6 @@
 import type { AddMonitorUseCase } from '@/core'
-import type { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase } from '@/search'
+import type { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase } from '@/use-cases'
+
 import type { PrintingsSelectionPresenter } from '../add-monitor/printings-selection-presenter'
 import type { FuzzySearchPresenter } from '../search/fuzzy-search-presenter'
 

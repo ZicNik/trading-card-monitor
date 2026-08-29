@@ -1,4 +1,4 @@
-import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from '@/search'
+import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from '@/use-cases'
 import { ReplyKeyboardButton, type ReplyKeyboard } from '../bot-output'
 import type { MessageViewModel } from '../views'
 

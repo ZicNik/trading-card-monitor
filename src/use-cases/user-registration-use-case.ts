@@ -1,4 +1,4 @@
-import { User, type UserRepository } from './user'
+import { User, type UserRepository } from '@/user'
 
 export type UserRegistrationInput = Readonly<{
   id: string

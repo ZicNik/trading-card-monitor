@@ -1,4 +1,4 @@
-import type { FuzzySearchRequestedOutput, FuzzySearchRequestedOutputPort } from '@/search'
+import type { FuzzySearchRequestedOutput, FuzzySearchRequestedOutputPort } from '@/use-cases'
 import type { MessageViewModel } from '../views'
 
 export type FuzzySearchState = FuzzySearchRequestedOutput

@@ -10,8 +10,7 @@ import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarket
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
-import { UserRegistrationUseCase } from '@/user'
-
+import { UserRegistrationUseCase } from '@/use-cases'
 import assert from 'node:assert'
 
 // class TestUserRepository implements UserRepository {

@@ -1,5 +1,4 @@
-import type { CardCatalog } from './card-catalog'
-import type { CardPrototype } from './card-prototype'
+import type { CardCatalog, CardPrototype } from '@/search'
 
 export type FuzzySearchRequestedInput = string
 

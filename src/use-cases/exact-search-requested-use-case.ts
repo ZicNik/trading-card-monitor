@@ -1,5 +1,5 @@
 import type { CardPrintingProps, MarketType } from '@/core'
-import type { CardCatalog } from './card-catalog'
+import type { CardCatalog } from '@/search'
 
 export type ExactSearchRequestedInput = Readonly<{
   cardName: string
