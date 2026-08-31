@@ -29,6 +29,7 @@ function toCardListing(cardName: string, product: CardTraderProduct): CardListin
       euroCents: product.price.cents,
       foil: product.properties_hash.mtg_foil,
       printing: new CardPrinting({
+        setName: product.expansion.name_en,
         setCode: product.expansion.code,
         collectorNum: product.properties_hash.collector_number,
       }),

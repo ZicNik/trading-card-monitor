@@ -115,6 +115,7 @@ function selectToCardTraderCardMonitor(
         new MonitorBaseFilters({
           maxEuroCents: monitor.max_euro_cents,
           printings: printings.map(p => ({
+            setName: p.set_name,
             setCode: p.set_code,
             collectorNum: p.coll_num,
           })),
@@ -152,6 +153,7 @@ function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCrea
 function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardPrintingProps[]): InsertMonitoredPrinting[] {
   return printings.map(p => ({
     card_monitor_id: monitorId,
+    set_name: p.setName,
     set_code: p.setCode,
     coll_num: p.collectorNum,
   }))

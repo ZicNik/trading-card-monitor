@@ -1,6 +1,7 @@
 /** @see {@link https://scryfall.com/docs/api/cards} */
 export type ScryfallCard = Readonly<{
   name: string
+  set_name: string
   set: string
   collector_number: string
   image_uris?: ImageUris

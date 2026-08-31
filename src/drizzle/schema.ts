@@ -16,6 +16,7 @@ export const cardMonitorsTable = sqliteTable('card_monitors', {
 export const monitoredPrintingsTable = sqliteTable('monitored_printings', {
   card_monitor_id: integer().notNull()
     .references(() => cardMonitorsTable.id, { onDelete: 'cascade' }),
+  set_name: text().notNull(),
   set_code: text().notNull(),
   coll_num: text().notNull(),
 })

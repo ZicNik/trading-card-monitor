@@ -8,6 +8,7 @@ export class CardTraderCardFetcher implements CardFetcher {
   async getCard(name: string): Promise<Card | undefined> {
     const dbPrintings = await DRIZZLE_DB
       .select({
+        setName: cardtraderSetsTable.name,
         setCode: cardtraderSetsTable.code,
         collectorNum: cardtraderBlueprintsTable.coll_num,
       })

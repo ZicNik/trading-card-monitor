@@ -15,12 +15,14 @@ export class Card {
 
 /** A card's specific iteration. */
 export class CardPrinting extends ValueObject<CardPrintingProps> {
+  get setName() { return this.props.setName }
   get setCode() { return this.props.setCode }
   get collectorNum() { return this.props.collectorNum }
 }
 
 /** @see {@link CardPrinting} */
 export type CardPrintingProps = Readonly<{
+  setName: string
   setCode: string
   collectorNum: string
 }>
