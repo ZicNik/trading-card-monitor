@@ -1,4 +1,4 @@
-export * from './exact-search-requested-use-case'
-export * from './fuzzy-search-requested-use-case'
+export * from './exact-search-requested'
+export * from './fuzzy-search-requested'
 export * from './process-active-monitors'
-export * from './user-registration-use-case'
+export * from './user-registration'
