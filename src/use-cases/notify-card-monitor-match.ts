@@ -1,6 +1,7 @@
 import type { CardMonitorRepository } from '@/core'
 
 export type MatchNotificationListingData = Readonly<{
+  setName: string
   setCode: string
   collectorNum: string
   url: string
