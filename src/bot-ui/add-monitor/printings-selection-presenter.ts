@@ -2,11 +2,13 @@ import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from 
 import { ReplyKeyboardButton, type ReplyKeyboard } from '../bot-output'
 import type { MessageViewModel } from '../views'
 
+export const printingsSelectAllPayload = 'printings-select-all'
 export const printingsSubmissionPayload = 'printings-submit'
 
+export type SelectablePrinting = ExactSearchRequestedOutput['printings'][number] & { readonly selected: boolean }
+
 export type PrintingsSelectionState = Readonly<{
-  printings: ExactSearchRequestedOutput['printings']
-  selection: readonly boolean[]
+  printings: readonly SelectablePrinting[]
   submitted: boolean
 }>
 
@@ -15,26 +17,34 @@ type PrintingsSelectionViewModel = MessageViewModel
 export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPort {
   state!: PrintingsSelectionState
   get vm(): PrintingsSelectionViewModel {
-    const printings = [...this.state.printings]
-    const selection = [...this.state.selection]
+    const printings = this.state.printings
     return {
-      text: text(printings, selection),
-      options: { ...(this.state.submitted ? {} : { keyboard: keyboard(printings, selection) }) },
+      text: text(printings),
+      options: { ...(this.state.submitted ? {} : { keyboard: keyboard(printings) }) },
     }
   }
 
   present(output: ExactSearchRequestedOutput): void {
     this.state = {
-      printings: output.printings,
-      selection: Array(output.printings.length).fill(false),
+      printings: output.printings.map(p => ({ ...p, selected: false })),
       submitted: false,
     }
   }
 
-  togglePrinting(index: number): void {
-    const selection = [...this.state.selection]
-    selection[index] = !selection[index]
-    this.state = { ...this.state, selection }
+  togglePrinting(id: string): void {
+    this.state = {
+      ...this.state,
+      printings: this.state.printings
+        .map(p => printingId(p) === id ? { ...p, selected: !p.selected } : p),
+    }
+  }
+
+  selectAll(): void {
+    this.state = {
+      ...this.state,
+      printings: this.state.printings
+        .map(p => ({ ...p, selected: true })),
+    }
   }
 
   submit(): void {
@@ -42,18 +52,23 @@ export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPo
   }
 }
 
-function text(printings: PrintingsSelectionState['printings'], selection: boolean[]): string {
-  return 'Select from the following:\n'
-    + printings.map((p, i) => `${selection[i] ? '✅' : '❌'} ${printingLabel(p)}`).join('\n')
+function printingId(p: SelectablePrinting): string {
+  return p.setCode + p.collectorNum
 }
 
-function keyboard(printings: PrintingsSelectionState['printings'], selection: boolean[]): ReplyKeyboard {
-  return [
-    ...printings.map((p, i) => [ReplyKeyboardButton.create(printingLabel(p), i.toString())]),
-    ...(selection.includes(true) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
-  ]
-}
-
-function printingLabel(p: PrintingsSelectionState['printings'][number]): string {
+function printingLabel(p: SelectablePrinting): string {
   return `${p.setCode} - ${p.collectorNum}`
+}
+
+function text(printings: readonly SelectablePrinting[]): string {
+  return 'Select from the following:\n'
+    + printings.map(p => `${p.selected ? '✅' : '❌'} ${printingLabel(p)}`).join('\n')
+}
+
+function keyboard(printings: readonly SelectablePrinting[]): ReplyKeyboard {
+  return [
+    [ReplyKeyboardButton.create('ALL', printingsSelectAllPayload)],
+    ...printings.map(p => [ReplyKeyboardButton.create(printingLabel(p), printingId(p))]),
+    ...(printings.some(p => p.selected) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
+  ]
 }

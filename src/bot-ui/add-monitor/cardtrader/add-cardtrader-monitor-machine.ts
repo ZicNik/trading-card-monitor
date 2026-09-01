@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
+import { and, assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
+
 import { ReplyKeyboard } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
 import type { AddMonitorInput } from '@/core'
-import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
-import { printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
+
+import { printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
@@ -36,18 +38,26 @@ export const addCardTraderMonitorMachine = setup({
     | { type: 'buttonPress', payload: string },
   },
   guards: {
-    isButtonPress: ({ event }) => event.type === 'buttonPress',
+    isPrintingsSelectAll: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSelectAllPayload,
     isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
     isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)([.,]\d{2})?$/.test(event.text),
   },
   actions: {
     setPrintingsSelectionPresenterState: ({ context, system }) => { system.env.printingsSelectionPresenter.state = context.printingsSelection! },
+    selectAllPrintings: assign({ printingsSelection: ({ context, event, system }) => {
+      if (event.type !== 'buttonPress')
+        return context.printingsSelection
+      const presenter = system.env.printingsSelectionPresenter
+      presenter.state = context.printingsSelection!
+      presenter.selectAll()
+      return presenter.state
+    } }),
     togglePrinting: assign({ printingsSelection: ({ context, event, system }) => {
       if (event.type !== 'buttonPress')
         return context.printingsSelection
       const presenter = system.env.printingsSelectionPresenter
       presenter.state = context.printingsSelection!
-      presenter.togglePrinting(parseInt(event.payload))
+      presenter.togglePrinting(event.payload)
       return presenter.state
     } }),
     submitPrintings: assign({ printingsSelection: ({ context, system }) => {
@@ -165,9 +175,13 @@ export const addCardTraderMonitorMachine = setup({
     awaitingForPrintingsSelection: {
       on: {
         buttonPress: [{
-          guard: not('isPrintingsSubmission'),
+          guard: and([not('isPrintingsSelectAll'), not('isPrintingsSubmission')]),
           actions: 'togglePrinting',
-          target: 'togglingPrinting',
+          target: 'updatingPrintingsSelection',
+        }, {
+          guard: 'isPrintingsSelectAll',
+          actions: 'selectAllPrintings',
+          target: 'updatingPrintingsSelection',
         }, {
           guard: 'isPrintingsSubmission',
           actions: 'submitPrintings',
@@ -175,7 +189,7 @@ export const addCardTraderMonitorMachine = setup({
         }],
       },
     },
-    togglingPrinting: {
+    updatingPrintingsSelection: {
       invoke: {
         src: 'editPrintingsSelection',
         input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId! }),
@@ -307,8 +321,7 @@ function toAddMonitorInput(context: AddCardTraderMonitorMachineContext): AddMoni
     userId: context.chatId,
     cardName: context.cardName!,
     baseFilters: {
-      printings: context.printingsSelection!.printings.filter((_, i) =>
-        context.printingsSelection!.selection[i]),
+      printings: context.printingsSelection!.printings.filter(p => p.selected),
       maxEuroCents: parseInt(context.maxPrice!),
       ...(context.foil !== undefined ? { foil: context.foil } : {}),
     },
