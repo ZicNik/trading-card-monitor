@@ -1,6 +1,8 @@
-import type { BotOutputPort, MessageFormatting, MessageInfo, MessageOptions, ReplyKeyboard } from '@/bot-ui/bot-output'
 import { InlineKeyboard } from 'grammy'
 import type { Message } from 'grammy/types'
+
+import type { BotOutputPort, MessageFormatting, MessageInfo, MessageOptions, ReplyKeyboard } from '@/bot-ui/bot-output'
+
 import { GRAMMY_BOT } from './bot'
 
 /** @see {@link https://grammy.dev/guide/api} */
@@ -25,20 +27,36 @@ function toGrammyMessageOptions(options: MessageOptions | undefined) {
   return options === undefined
     ? undefined
     : {
-        ...(options.formatting !== undefined ? { parse_mode: toGrammyParseMode(options.formatting) } : {}),
-        ...(options.keyboard !== undefined ? { reply_markup: toGrammyInlineKeyboard(options.keyboard) } : {}),
+        ...toGrammyParseMode(options.formatting),
+        ...toGrammyInlineKeyboard(options.keyboard),
+        ...toGrammyLinkPreview(options.linkPreview),
       }
 }
 
-function toGrammyParseMode(formatting: MessageFormatting): 'MarkdownV2' | 'HTML' {
+function toGrammyParseMode(formatting: MessageFormatting | undefined) {
+  if (formatting === undefined)
+    return {}
+  let parse_mode: 'HTML' | 'MarkdownV2'
   switch (formatting) {
     case 'html':
-      return 'HTML'
+      parse_mode = 'HTML'
+      break
     case 'markdown':
-      return 'MarkdownV2'
+      parse_mode = 'MarkdownV2'
+      break
   }
+  return { parse_mode }
 }
 
-function toGrammyInlineKeyboard(keyboard: ReplyKeyboard): InlineKeyboard {
-  return new InlineKeyboard(keyboard.map(row => row.map(button => ({ text: button.label, callback_data: button.payload }))))
+function toGrammyInlineKeyboard(keyboard: ReplyKeyboard | undefined) {
+  return keyboard === undefined
+    ? {}
+    : { reply_markup: new InlineKeyboard(keyboard.map(row => row.map(
+        button => ({ text: button.label, callback_data: button.payload })))) }
+}
+
+function toGrammyLinkPreview(linkPreview: boolean | undefined) {
+  return linkPreview === undefined
+    ? {}
+    : { link_preview_options: { is_disabled: linkPreview } }
 }

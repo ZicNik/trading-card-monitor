@@ -3,6 +3,7 @@ export type MessageInfo = Readonly<{ id: string }>
 export type MessageOptions = Partial<Readonly<{
   formatting: MessageFormatting
   keyboard: ReplyKeyboard
+  linkPreview: boolean
 }>>
 
 export type MessageFormatting = 'markdown' | 'html'
