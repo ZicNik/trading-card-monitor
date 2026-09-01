@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
+import assert from 'node:assert'
+
 import { BotUI } from '@/bot-ui/bot-ui'
+import { createCardMonitorMatchNotifier } from '@/bot-ui/notifications'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
@@ -10,8 +13,7 @@ import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarket
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
-import { UserRegistrationUseCase } from '@/use-cases'
-import assert from 'node:assert'
+import { NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -45,16 +47,34 @@ const cardCatalog = new CardCatalog({
 const listingCatalog = new CardTraderListingCatalog(cardTraderApis)
 const monitorRepository = new DbCardMonitorRepository()
 const userRepository = new DbUserRepository()
+const botOutputPort = new GrammyOutputPort()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
 const addMonitorUseCase = new AddMonitorUseCase(new AddMonitorDoNothingOutputPort(), monitorRepository)
+const notifyMonitorMatchUseCase = new NotifyCardMonitorMatchUseCase(
+  createCardMonitorMatchNotifier(botOutputPort),
+  monitorRepository,
+)
 const botUI = new BotUI(
   new RedisStateMachineStorage(),
   new GrammyInputPort(),
-  new GrammyOutputPort(),
+  botOutputPort,
   userRegistrationUseCase,
   addMonitorUseCase,
   cardCatalog,
 )
+
+// Register handlers
+// eventBus.subscribe('cardMonitorMatched', event => notifyMonitorMatchUseCase.execute({
+//   monitorId: event.monitorId,
+//   listings: event.listings.map(l => ({
+//     setName: l.baseAttributes.printing.setName,
+//     setCode: l.baseAttributes.printing.setCode,
+//     collectorNum: l.baseAttributes.printing.collectorNum,
+//     url: l.baseAttributes.url,
+//     euroCents: l.baseAttributes.euroCents,
+//     foil: l.baseAttributes.foil,
+//   })),
+// }))
 
 // Start cron jobs
 // startCardTraderDbSynchronization({ apis: cardTraderApis })
