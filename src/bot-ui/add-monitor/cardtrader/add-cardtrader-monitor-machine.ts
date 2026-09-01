@@ -40,7 +40,7 @@ export const addCardTraderMonitorMachine = setup({
   guards: {
     isPrintingsSelectAll: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSelectAllPayload,
     isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
-    isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)([.,]\d{2})?$/.test(event.text),
+    isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)(\.\d{2})?$/.test(event.text),
   },
   actions: {
     setPrintingsSelectionPresenterState: ({ context, system }) => { system.env.printingsSelectionPresenter.state = context.printingsSelection! },
@@ -322,7 +322,7 @@ function toAddMonitorInput(context: AddCardTraderMonitorMachineContext): AddMoni
     cardName: context.cardName!,
     baseFilters: {
       printings: context.printingsSelection!.printings.filter(p => p.selected),
-      maxEuroCents: parseInt(context.maxPrice!),
+      maxEuroCents: Math.round(parseFloat(context.maxPrice!) * 100),
       ...(context.foil !== undefined ? { foil: context.foil } : {}),
     },
     marketFilters: {
