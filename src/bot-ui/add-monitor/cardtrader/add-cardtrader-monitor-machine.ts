@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { and, assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
+import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 
 import { ReplyKeyboard } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
 import type { AddMonitorInput } from '@/core'
 
-import { printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
+import { printingId, printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'
 
@@ -38,7 +38,11 @@ export const addCardTraderMonitorMachine = setup({
     | { type: 'buttonPress', payload: string },
   },
   guards: {
-    isPrintingsSelectAll: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSelectAllPayload,
+    isPrintingToggling: ({ event, context }) => event.type === 'buttonPress'
+      && (context.printingsSelection?.printings.some(p => printingId(p) === event.payload) ?? false),
+    isPrintingsSelectAllAndIsAllowed: ({ event, context }) => event.type === 'buttonPress'
+      && event.payload === printingsSelectAllPayload
+      && (context.printingsSelection?.printings.some(p => !p.selected) ?? false),
     isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
     isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)(\.\d{2})?$/.test(event.text),
   },
@@ -175,11 +179,11 @@ export const addCardTraderMonitorMachine = setup({
     awaitingForPrintingsSelection: {
       on: {
         buttonPress: [{
-          guard: and([not('isPrintingsSelectAll'), not('isPrintingsSubmission')]),
+          guard: 'isPrintingToggling',
           actions: 'togglePrinting',
           target: 'updatingPrintingsSelection',
         }, {
-          guard: 'isPrintingsSelectAll',
+          guard: 'isPrintingsSelectAllAndIsAllowed',
           actions: 'selectAllPrintings',
           target: 'updatingPrintingsSelection',
         }, {

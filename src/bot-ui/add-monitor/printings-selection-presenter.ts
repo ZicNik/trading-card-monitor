@@ -1,9 +1,7 @@
 import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from '@/use-cases'
+
 import { ReplyKeyboardButton, type ReplyKeyboard } from '../bot-output'
 import type { MessageViewModel } from '../views'
-
-export const printingsSelectAllPayload = 'printings-select-all'
-export const printingsSubmissionPayload = 'printings-submit'
 
 export type SelectablePrinting = ExactSearchRequestedOutput['printings'][number] & { readonly selected: boolean }
 
@@ -52,7 +50,10 @@ export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPo
   }
 }
 
-function printingId(p: SelectablePrinting): string {
+export const printingsSelectAllPayload = 'printings-select-all'
+export const printingsSubmissionPayload = 'printings-submit'
+
+export function printingId(p: SelectablePrinting): string {
   return p.setCode + p.collectorNum
 }
 
