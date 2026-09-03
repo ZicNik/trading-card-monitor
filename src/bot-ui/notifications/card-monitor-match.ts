@@ -12,13 +12,13 @@ export class CardMonitorMatchNotifier implements NotifyCardMonitorMatchOutputPor
   async present(output: NotifyCardMonitorMatchOutput): Promise<void> {
     await this.view.render({
       chatId: output.userId,
-      text: messageText(output.cardName, output.listings),
+      text: text(output.cardName, output.listings),
       options: { formatting: 'html', linkPreview: false },
     })
   }
 }
 
-function messageText(cardName: string, listings: readonly MatchNotificationListingData[]): string {
+function text(cardName: string, listings: readonly MatchNotificationListingData[]): string {
   return `Match${listings.length > 1 ? 'es' : ''} found for ${cardName}!\n\n`
     + listings.map(listingText).join('\n\n')
 }

@@ -18,7 +18,11 @@ export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPo
     const printings = this.state.printings
     return {
       text: text(printings),
-      options: { ...(this.state.submitted ? {} : { keyboard: keyboard(printings) }) },
+      options: {
+        ...(this.state.submitted ? {} : { keyboard: keyboard(printings) }),
+        formatting: 'html',
+        linkPreview: false,
+      },
     }
   }
 
@@ -57,19 +61,23 @@ export function printingId(p: SelectablePrinting): string {
   return p.setCode + p.collectorNum
 }
 
-function printingLabel(p: SelectablePrinting): string {
-  return `${p.setCode} - ${p.collectorNum}`
-}
-
 function text(printings: readonly SelectablePrinting[]): string {
   return 'Select from the following:\n'
-    + printings.map(p => `${p.selected ? '✅' : '❌'} ${printingLabel(p)}`).join('\n')
+    + printings.map(printingText).join('\n')
+}
+
+function printingText(p: SelectablePrinting): string {
+  return `${p.selected ? '✅' : '❌'} [${printingButtonLabel(p)}] ${p.setName}`
+}
+
+function printingButtonLabel(p: SelectablePrinting): string {
+  return `${p.setCode} - ${p.collectorNum}`
 }
 
 function keyboard(printings: readonly SelectablePrinting[]): ReplyKeyboard {
   return [
     [ReplyKeyboardButton.create('ALL', printingsSelectAllPayload)],
-    ...printings.map(p => [ReplyKeyboardButton.create(printingLabel(p), printingId(p))]),
+    ...printings.map(p => [ReplyKeyboardButton.create(printingButtonLabel(p), printingId(p))]),
     ...(printings.some(p => p.selected) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
   ]
 }
