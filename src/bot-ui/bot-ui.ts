@@ -1,9 +1,8 @@
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
 
-import type { AddMonitorUseCase } from '@/core'
 import type { CardCatalog } from '@/search'
+import { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, UserRegistrationUseCase, type AddMonitorUseCase } from '@/use-cases'
 
-import { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, UserRegistrationUseCase } from '@/use-cases'
 import { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'

@@ -4,7 +4,7 @@ import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo
 
 import { ReplyKeyboard } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
-import type { AddMonitorInput } from '@/core'
+import type { AddMonitorInput } from '@/use-cases'
 
 import { printingId, printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 

@@ -5,7 +5,7 @@ import assert from 'node:assert'
 import { BotUI } from '@/bot-ui/bot-ui'
 import { createCardMonitorMatchNotifier } from '@/bot-ui/notifications'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
-import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
+import { CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { EventBus } from '@/event-bus'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
@@ -13,7 +13,7 @@ import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarket
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
-import { NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
+import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
