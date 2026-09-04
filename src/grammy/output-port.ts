@@ -58,5 +58,5 @@ function toGrammyInlineKeyboard(keyboard: ReplyKeyboard | undefined) {
 function toGrammyLinkPreview(linkPreview: boolean | undefined) {
   return linkPreview === undefined
     ? {}
-    : { link_preview_options: { is_disabled: linkPreview } }
+    : { link_preview_options: { is_disabled: !linkPreview } }
 }
