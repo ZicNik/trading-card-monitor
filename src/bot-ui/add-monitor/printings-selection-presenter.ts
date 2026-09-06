@@ -67,7 +67,7 @@ function text(printings: readonly SelectablePrinting[]): string {
 }
 
 function printingText(p: SelectablePrinting): string {
-  return `${p.selected ? '✅' : '❌'} ${p.setName} [${printingButtonLabel(p)}]`
+  return `${p.selected ? '✅' : '❌'} <a href="${p.url}">${p.setName} [${printingButtonLabel(p)}]</a>`
 }
 
 function printingButtonLabel(p: SelectablePrinting): string {
