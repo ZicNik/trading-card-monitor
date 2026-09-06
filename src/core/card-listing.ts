@@ -14,6 +14,7 @@ export type ListingBaseAttributes = Readonly<{
   printing: CardPrinting
   euroCents: number
   foil: boolean
+  seller: string
   // condition: string,
   // language: string,
   // sellerCountry: string,

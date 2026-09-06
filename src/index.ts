@@ -191,6 +191,7 @@ function testCardMonitorMatches() {
       euroCents: 1500,
       foil: false,
       printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
+      seller: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -200,6 +201,7 @@ function testCardMonitorMatches() {
       euroCents: 1,
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
+      seller: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -209,6 +211,7 @@ function testCardMonitorMatches() {
       euroCents: 1000,
       foil: false,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+      seller: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -218,6 +221,7 @@ function testCardMonitorMatches() {
       euroCents: 1000,
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+      seller: '',
     },
     { market: 'cardtrader', ctZero: true },
   )
@@ -227,6 +231,7 @@ function testCardMonitorMatches() {
       euroCents: 1000,
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+      seller: '',
     },
     { market: 'cardtrader', ctZero: false },
   )

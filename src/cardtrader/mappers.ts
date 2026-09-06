@@ -19,6 +19,7 @@ export function cardtraderProductToCardListing(cardName: string, product: CardTr
         collectorNum: product.properties_hash.collector_number,
         url: urlFromBlueprintId(product.blueprint_id),
       }),
+      seller: product.user.username,
     },
     {
       market: 'cardtrader',
