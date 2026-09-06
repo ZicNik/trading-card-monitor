@@ -12,7 +12,6 @@ export class CardListing<M extends MarketType = MarketType> {
 export type ListingBaseAttributes = Readonly<{
   name: string
   printing: CardPrinting
-  url: string
   euroCents: number
   foil: boolean
   // condition: string,
