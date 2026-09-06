@@ -5,6 +5,7 @@ export type MatchNotificationListingData = Readonly<{
   setCode: string
   collectorNum: string
   url: string
+  seller: string
   euroCents: number
   foil: boolean
 }>

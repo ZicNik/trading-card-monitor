@@ -25,6 +25,7 @@ function text(cardName: string, listings: readonly MatchNotificationListingData[
 
 function listingText(listing: MatchNotificationListingData) {
   return `<a href="${listing.url}">${listing.setName} [${listing.setCode} ${listing.collectorNum}]</a>
+<b>Seller:</b> ${listing.seller}
 <b>Price:</b> ${formatEuroCents(listing.euroCents)}
 <b>Foil:</b> ${listing.foil ? 'yes' : 'no'}`
 }

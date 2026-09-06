@@ -71,6 +71,7 @@ const botUI = new BotUI(
 //     setCode: l.baseAttributes.printing.setCode,
 //     collectorNum: l.baseAttributes.printing.collectorNum,
 //     url: l.baseAttributes.printing.url,
+//     seller: l.baseAttributes.seller,
 //     euroCents: l.baseAttributes.euroCents,
 //     foil: l.baseAttributes.foil,
 //   })),
