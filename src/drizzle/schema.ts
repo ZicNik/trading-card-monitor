@@ -19,6 +19,7 @@ export const monitoredPrintingsTable = sqliteTable('monitored_printings', {
   set_name: text().notNull(),
   set_code: text().notNull(),
   coll_num: text().notNull(),
+  url: text().notNull(),
 })
 
 export const cardtraderMonitorFiltersTable = sqliteTable('cardtrader_monitor_filters', {

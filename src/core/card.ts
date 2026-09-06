@@ -18,6 +18,7 @@ export class CardPrinting extends ValueObject<CardPrintingProps> {
   get setName() { return this.props.setName }
   get setCode() { return this.props.setCode }
   get collectorNum() { return this.props.collectorNum }
+  get url() { return this.props.url }
 }
 
 /** @see {@link CardPrinting} */
@@ -25,4 +26,5 @@ export type CardPrintingProps = Readonly<{
   setName: string
   setCode: string
   collectorNum: string
+  url: string
 }>

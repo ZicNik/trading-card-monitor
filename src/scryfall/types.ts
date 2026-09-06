@@ -4,6 +4,7 @@ export type ScryfallCard = Readonly<{
   set_name: string
   set: string
   collector_number: string
+  scryfall_uri: string
   image_uris?: ImageUris
   card_faces?: readonly CardFace[]
 }>

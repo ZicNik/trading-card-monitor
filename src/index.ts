@@ -129,8 +129,8 @@ async function testCardMonitorRepository() {
     baseFilters: {
       maxEuroCents: 1000,
       printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '233' },
-        { setName: '', setCode: 'LEB', collectorNum: '233' },
+        { setName: '', setCode: 'LEA', collectorNum: '233', url: '' },
+        { setName: '', setCode: 'LEB', collectorNum: '233', url: '' },
       ],
     },
     marketFilters: { market: 'cardtrader' },
@@ -142,8 +142,8 @@ async function testCardMonitorRepository() {
     baseFilters: {
       maxEuroCents: 200,
       printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '100' },
-        { setName: '', setCode: 'LEB', collectorNum: '101' },
+        { setName: '', setCode: 'LEA', collectorNum: '100', url: '' },
+        { setName: '', setCode: 'LEB', collectorNum: '101', url: '' },
       ],
     },
     marketFilters: { market: 'cardtrader' },
@@ -176,8 +176,8 @@ function testCardMonitorMatches() {
     new MonitorBaseFilters({
       maxEuroCents: 1000,
       printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '233' },
-        { setName: '', setCode: 'LEB', collectorNum: '233' },
+        { setName: '', setCode: 'LEA', collectorNum: '233', url: '' },
+        { setName: '', setCode: 'LEB', collectorNum: '233', url: '' },
       ],
     }),
     MonitorMarketFilters.create({
@@ -190,7 +190,7 @@ function testCardMonitorMatches() {
       name: 'Black Lotus',
       euroCents: 1500,
       foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233' }),
+      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
       url: '',
     },
     { market: 'cardtrader', ctZero: true },
@@ -200,7 +200,7 @@ function testCardMonitorMatches() {
       name: 'Lightning Bolt',
       euroCents: 1,
       foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100' }),
+      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
       url: '',
     },
     { market: 'cardtrader', ctZero: true },
@@ -210,7 +210,7 @@ function testCardMonitorMatches() {
       name: 'Black Lotus',
       euroCents: 1000,
       foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233' }),
+      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       url: '',
     },
     { market: 'cardtrader', ctZero: true },
@@ -220,7 +220,7 @@ function testCardMonitorMatches() {
       name: 'Black Lotus',
       euroCents: 1000,
       foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233' }),
+      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       url: '',
     },
     { market: 'cardtrader', ctZero: true },
@@ -230,7 +230,7 @@ function testCardMonitorMatches() {
       name: 'Black Lotus',
       euroCents: 1000,
       foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233' }),
+      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       url: '',
     },
     { market: 'cardtrader', ctZero: false },

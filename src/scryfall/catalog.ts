@@ -75,6 +75,7 @@ function toCard(prints: ScryfallCard[]): Card | undefined {
       setName: p.set_name,
       setCode: p.set,
       collectorNum: p.collector_number,
+      url: p.scryfall_uri,
     })),
   })
 }

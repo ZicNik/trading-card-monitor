@@ -118,6 +118,7 @@ function selectToCardTraderCardMonitor(
             setName: p.set_name,
             setCode: p.set_code,
             collectorNum: p.coll_num,
+            url: p.url,
           })),
           ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
         }),
@@ -156,6 +157,7 @@ function monitoredPrintingsToInsert(monitorId: number, printings: readonly CardP
     set_name: p.setName,
     set_code: p.setCode,
     coll_num: p.collectorNum,
+    url: p.url,
   }))
 }
 
