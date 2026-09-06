@@ -67,17 +67,20 @@ function text(printings: readonly SelectablePrinting[]): string {
 }
 
 function printingText(p: SelectablePrinting): string {
-  return `${p.selected ? '✅' : '❌'} [${printingButtonLabel(p)}] ${p.setName}`
+  return `${p.selected ? '✅' : '❌'} ${p.setName} [${printingButtonLabel(p)}]`
 }
 
 function printingButtonLabel(p: SelectablePrinting): string {
-  return `${p.setCode} - ${p.collectorNum}`
+  return `${p.setCode} ${p.collectorNum}`
 }
 
 function keyboard(printings: readonly SelectablePrinting[]): ReplyKeyboard {
-  return [
-    [ReplyKeyboardButton.create('ALL', printingsSelectAllPayload)],
-    ...printings.map(p => [ReplyKeyboardButton.create(printingButtonLabel(p), printingId(p))]),
-    ...(printings.some(p => p.selected) ? [[ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)]] : []),
-  ]
+  const buttonRows = [[ReplyKeyboardButton.create('ALL', printingsSelectAllPayload)]]
+  const printingButtonsPerRow = 3
+  for (let i = 0; i < printings.length; i += printingButtonsPerRow)
+    buttonRows.push(printings.slice(i, i + printingButtonsPerRow)
+      .map(p => ReplyKeyboardButton.create(printingButtonLabel(p), printingId(p))))
+  if (printings.some(p => p.selected))
+    buttonRows.push([ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)])
+  return buttonRows
 }
