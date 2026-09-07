@@ -62,12 +62,11 @@ export function printingId(p: SelectablePrinting): string {
 }
 
 function text(printings: readonly SelectablePrinting[]): string {
-  return 'Select from the following:\n'
-    + printings.map(printingText).join('\n')
+  return printings.map(printingText).join('\n')
 }
 
 function printingText(p: SelectablePrinting): string {
-  return `${p.selected ? '✅' : '❌'} <a href="${p.url}">${p.setName} [${printingButtonLabel(p)}]</a>`
+  return `${p.selected ? '✅' : '❌'} <a href="${p.url}"><u>${printingButtonLabel(p)}</u></a> ${p.setName}`
 }
 
 function printingButtonLabel(p: SelectablePrinting): string {
@@ -75,11 +74,17 @@ function printingButtonLabel(p: SelectablePrinting): string {
 }
 
 function keyboard(printings: readonly SelectablePrinting[]): ReplyKeyboard {
-  const buttonRows = [[ReplyKeyboardButton.create('ALL', printingsSelectAllPayload)]]
+  const buttonRows = [[ReplyKeyboardButton.create('SELECT ALL', printingsSelectAllPayload)]]
   const printingButtonsPerRow = 3
   for (let i = 0; i < printings.length; i += printingButtonsPerRow)
     buttonRows.push(printings.slice(i, i + printingButtonsPerRow)
       .map(p => ReplyKeyboardButton.create(printingButtonLabel(p), printingId(p))))
+  const placeholdersCount = printings.length % printingButtonsPerRow !== 0
+    ? printingButtonsPerRow - printings.length % printingButtonsPerRow
+    : 0
+  if (placeholdersCount !== 0)
+    buttonRows[buttonRows.length - 1]?.push(
+      ...Array<ReplyKeyboardButton>(placeholdersCount).fill(ReplyKeyboardButton.create('-')))
   if (printings.some(p => p.selected))
     buttonRows.push([ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)])
   return buttonRows
