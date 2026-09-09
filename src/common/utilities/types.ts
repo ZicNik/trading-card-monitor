@@ -30,7 +30,7 @@ export interface MaybeComparable extends Equatable {
 */
 export interface Comparable extends MaybeComparable {
 
-  /** @returns `0`, `1`, or `-1` if `this` is respectively equal to, greater than, or lesser than `other`. */
+  /** @returns `-1` if `this < other`, `1` if `this > other`, `0` if equal. */
   compareTo(other: this): 0 | 1 | -1
 }
 
