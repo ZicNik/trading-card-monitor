@@ -2,7 +2,7 @@
 
 import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 
-import { ReplyKeyboard } from '@/bot-ui/bot-output'
+import { ReplyKeyboard, ReplyKeyboardButton } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
 import type { AddMonitorInput } from '@/use-cases'
 
@@ -16,16 +16,58 @@ export interface AddCardTraderMonitorMachineContext {
   cardName?: string
   printingsSelection?: PrintingsSelectionState
   maxPrice?: string
+  minCondition?: Condition
+  language?: Language
   foil?: boolean
   ctZero?: boolean
 }
 
+const choiceYesPayload = 'choice-yes'
+const choiceYesLabel = 'Yes'
+const choiceNoPayload = 'choice-no'
+const choiceNoLabel = 'No'
+const choiceAnyPayload = 'choice-any'
+const choiceAnyLabel = 'Any'
+function mapYesNoAnyPayload(payload: string): boolean | undefined {
+  switch (payload) {
+    case choiceYesPayload: return true
+    case choiceNoPayload: return false
+    case choiceAnyLabel: return undefined
+    default: throw new Error(`Unexpected "${payload}" payload from yes/no/any choice.`)
+  }
+}
+function yesNoAnyLabel(choice: boolean | undefined): string {
+  switch (choice) {
+    case true: return choiceYesLabel
+    case false: return choiceNoLabel
+    case undefined: return choiceAnyLabel
+  }
+}
+const yesNoAnyKeyboard = ReplyKeyboard.from([
+  [[choiceYesLabel, choiceYesPayload], [choiceNoLabel, choiceNoPayload]],
+  [choiceAnyLabel, choiceAnyPayload],
+])
+
+const askForMinConditionMessage = 'What minimum conditions must the card meet?'
+const conditions = ['near-mint', 'moderately-played'] as const
+type Condition = typeof conditions[number]
+function conditionLabel(c: Condition | undefined): string {
+  switch (c) {
+    case 'near-mint': return 'Near Mint'
+    case 'moderately-played': return 'Moderately Played'
+    case undefined: return choiceAnyLabel
+  }
+}
+
+const askForLanguageMessage = 'What language does it need to be in?'
+const languages = ['en', 'it', 'es', 'fr', 'de', 'ru', 'jp', 'cn'] as const
+type Language = typeof languages[number]
+function languageLabel(l: Language | undefined): string {
+  return l === undefined ? choiceAnyLabel : l.toUpperCase()
+}
+
 const askForFoilMessage = 'Do you want the card to be foil?'
-const foilYesPayload = 'foil-yes'
-const foilNoPayload = 'foil-no'
 const askForCtZeroMessage = 'Do you want to buy using CardTrader Zero?'
-const ctZeroYesPayload = 'ct-zero-yes'
-const ctZeroNoPayload = 'ct-zero-no'
 
 export const addCardTraderMonitorMachine = setup({
   types: {
@@ -45,6 +87,12 @@ export const addCardTraderMonitorMachine = setup({
       && (context.printingsSelection?.printings.some(p => !p.selected) ?? false),
     isPrintingsSubmission: ({ event }) => event.type === 'buttonPress' && event.payload === printingsSubmissionPayload,
     isValidMaxPrice: ({ event }) => event.type === 'message' && /^(0|[1-9]\d*)(\.\d{2})?$/.test(event.text),
+    isValidMinCondition: ({ event }) => event.type === 'buttonPress'
+      && (conditions.some(c => event.payload === c) || event.payload === choiceAnyPayload),
+    isValidLanguage: ({ event }) => event.type === 'buttonPress'
+      && (languages.some(l => event.payload === l) || event.payload === choiceAnyPayload),
+    isValidYesOrNoOrAny: ({ event }) => event.type === 'buttonPress'
+      && (event.payload === choiceYesPayload || event.payload === choiceNoPayload || event.payload === choiceAnyPayload),
   },
   actions: {
     setPrintingsSelectionPresenterState: ({ context, system }) => { system.env.printingsSelectionPresenter.state = context.printingsSelection! },
@@ -70,30 +118,6 @@ export const addCardTraderMonitorMachine = setup({
       presenter.submit()
       return presenter.state
     } }),
-    assignFoil: assign({ foil: ({ event }) => {
-      if (event.type !== 'buttonPress')
-        return undefined
-      switch (event.payload) {
-        case foilYesPayload:
-          return true
-        case foilNoPayload:
-          return false
-        default:
-          return undefined
-      }
-    } }),
-    assignCtZero: assign({ ctZero: ({ event }) => {
-      if (event.type !== 'buttonPress')
-        return undefined
-      switch (event.payload) {
-        case ctZeroYesPayload:
-          return true
-        case ctZeroNoPayload:
-          return false
-        default:
-          return undefined
-      }
-    } }),
   },
   actors: {
     askForCardName: Message.withText('Which card would you like to monitor on CardTrader?').toActor(),
@@ -106,23 +130,35 @@ export const addCardTraderMonitorMachine = setup({
     editPrintingsSelection: EditedMessage.withViewModel(({ env }) => env.printingsSelectionPresenter.vm).toActor(),
     askForMaxPrice: Message.withText('What is the maximum price, in euros, you are willing to pay for this card?').toActor(),
     showMaxPriceError: Message.withText('This is not a valid amount. Try again.').toActor(),
-    askForFoil: Message.withText(askForFoilMessage, {
-      keyboard: ReplyKeyboard.from([
-        [['Yes', foilYesPayload], ['No', foilNoPayload]],
-        ['Any'],
-      ]),
+    askForMinCondition: Message.withText(askForMinConditionMessage, {
+      keyboard: [
+        conditions.map(c => ReplyKeyboardButton.create(conditionLabel(c), c)),
+        [ReplyKeyboardButton.create(choiceAnyLabel, choiceAnyPayload)],
+      ],
     }).toActor(),
-    submitFoil: EditedMessage.withDynamicText((input: { foil: boolean | undefined }) =>
-      `${askForFoilMessage} *${toYesOrNoOrAny(input.foil)}*`, { formatting: 'markdown' },
+    submitMinCondition: EditedMessage.withDynamicText((input: { minCondition: Condition | undefined }) =>
+      `${askForMinConditionMessage} *${conditionLabel(input.minCondition)}*`, { formatting: 'markdown' },
     ).toActor(),
-    askForCtZero: Message.withText(askForCtZeroMessage, {
-      keyboard: ReplyKeyboard.from([
-        [['Yes', ctZeroYesPayload], ['No', ctZeroNoPayload]],
-        ['Any'],
-      ]),
+    askForLanguage: Message.withText(askForLanguageMessage, {
+      keyboard: (() => {
+        const languageButtons = languages.map(l => [ReplyKeyboardButton.create(languageLabel(l), l)])
+        return [
+          ...languageButtons.slice(0, 4),
+          ...languageButtons.slice(4),
+          [ReplyKeyboardButton.create(choiceAnyLabel, choiceAnyPayload)],
+        ]
+      })(),
     }).toActor(),
+    submitLanguage: EditedMessage.withDynamicText((input: { language: Language | undefined }) =>
+      `${askForLanguageMessage} *${languageLabel(input.language)}*`, { formatting: 'markdown' },
+    ).toActor(),
+    askForFoil: Message.withText(askForFoilMessage, { keyboard: yesNoAnyKeyboard }).toActor(),
+    submitFoil: EditedMessage.withDynamicText((input: { foil: boolean | undefined }) =>
+      `${askForFoilMessage} *${yesNoAnyLabel(input.foil)}*`, { formatting: 'markdown' },
+    ).toActor(),
+    askForCtZero: Message.withText(askForCtZeroMessage, { keyboard: yesNoAnyKeyboard }).toActor(),
     submitCtZero: EditedMessage.withDynamicText((input: { ctZero: boolean | undefined }) =>
-      `${askForCtZeroMessage} *${toYesOrNoOrAny(input.ctZero)}*`, { formatting: 'markdown' },
+      `${askForCtZeroMessage} *${yesNoAnyLabel(input.ctZero)}*`, { formatting: 'markdown' },
     ).toActor(),
     addMonitor: fromPromise(({ input, system }: { input: AddMonitorInput, system: ActorSystem<ActorSystemInfo> }) =>
       system.env.addMonitorUseCase.execute(input)),
@@ -233,6 +269,60 @@ export const addCardTraderMonitorMachine = setup({
         onDone: 'awaitingForMaxPrice',
       },
     },
+    askingForMinCondition: {
+      invoke: {
+        src: 'askForMinCondition',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: {
+          target: 'awaitingForMinCondition',
+          actions: assign({ messageId: ({ event }) => event.output.id }),
+        },
+      },
+    },
+    awaitingForMinCondition: {
+      on: {
+        buttonPress: {
+          guard: 'isValidMinCondition',
+          actions: assign({ minCondition: ({ event }) =>
+            event.payload === choiceAnyPayload ? undefined : event.payload as Condition }),
+          target: 'submittingMinCondition',
+        },
+      },
+    },
+    submittingMinCondition: {
+      invoke: {
+        src: 'submitMinCondition',
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId!, minCondition: context.minCondition }),
+        onDone: 'askingForLanguage',
+      },
+    },
+    askingForLanguage: {
+      invoke: {
+        src: 'askForLanguage',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: {
+          target: 'awaitingForLanguage',
+          actions: assign({ messageId: ({ event }) => event.output.id }),
+        },
+      },
+    },
+    awaitingForLanguage: {
+      on: {
+        buttonPress: {
+          guard: 'isValidLanguage',
+          actions: assign({ language: ({ event }) =>
+            event.payload === choiceAnyPayload ? undefined : event.payload as Language }),
+          target: 'submittingLanguage',
+        },
+      },
+    },
+    submittingLanguage: {
+      invoke: {
+        src: 'submitLanguage',
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId!, language: context.language }),
+        onDone: 'askingForFoil',
+      },
+    },
     askingForFoil: {
       invoke: {
         src: 'askForFoil',
@@ -246,7 +336,8 @@ export const addCardTraderMonitorMachine = setup({
     awaitingForFoil: {
       on: {
         buttonPress: {
-          actions: 'assignFoil',
+          guard: 'isValidYesOrNoOrAny',
+          actions: assign({ foil: ({ event }) => mapYesNoAnyPayload(event.payload) }),
           target: 'submittingFoil',
         },
       },
@@ -271,7 +362,8 @@ export const addCardTraderMonitorMachine = setup({
     awaitingForCtZero: {
       on: {
         buttonPress: {
-          actions: 'assignCtZero',
+          guard: 'isValidYesOrNoOrAny',
+          actions: assign({ ctZero: ({ event }) => mapYesNoAnyPayload(event.payload) }),
           target: 'submittingCtZero',
         },
       },
@@ -308,17 +400,6 @@ export const addCardTraderMonitorMachine = setup({
     done: { type: 'final' },
   },
 })
-
-function toYesOrNoOrAny(b: boolean | undefined): string {
-  switch (b) {
-    case true:
-      return 'Yes'
-    case false:
-      return 'No'
-    case undefined:
-      return 'Any'
-  }
-}
 
 function toAddMonitorInput(context: AddCardTraderMonitorMachineContext): AddMonitorInput {
   return {
