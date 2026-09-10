@@ -190,6 +190,8 @@ function testCardMonitorMatches() {
     {
       name: 'Black Lotus',
       euroCents: 1500,
+      condition: 'near-mint',
+      language: 'en',
       foil: false,
       printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
       seller: '',
@@ -200,6 +202,8 @@ function testCardMonitorMatches() {
     {
       name: 'Lightning Bolt',
       euroCents: 1,
+      condition: 'near-mint',
+      language: 'en',
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
       seller: '',
@@ -210,6 +214,8 @@ function testCardMonitorMatches() {
     {
       name: 'Black Lotus',
       euroCents: 1000,
+      condition: 'near-mint',
+      language: 'en',
       foil: false,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       seller: '',
@@ -220,6 +226,8 @@ function testCardMonitorMatches() {
     {
       name: 'Black Lotus',
       euroCents: 1000,
+      condition: 'near-mint',
+      language: 'en',
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       seller: '',
@@ -230,6 +238,8 @@ function testCardMonitorMatches() {
     {
       name: 'Black Lotus',
       euroCents: 1000,
+      condition: 'near-mint',
+      language: 'en',
       foil: true,
       printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
       seller: '',

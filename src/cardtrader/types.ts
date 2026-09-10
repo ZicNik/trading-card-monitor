@@ -40,6 +40,7 @@ registerMarketFactory('cardtrader', 'monitorFilters', props => new CardTraderMon
 
 export const CT_MTG_GAME_ID = 1
 export const CT_CONDITIONS = {
+  M: 'Mint',
   NM: 'Near Mint',
   SP: 'Slightly Played',
   MP: 'Moderately Played',

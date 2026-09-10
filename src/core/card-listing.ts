@@ -1,4 +1,4 @@
-import type { CardPrinting } from './card'
+import type { CardCondition, CardPrinting } from './card'
 import type { ListingMarketAttributes, MarketType } from './market'
 
 export class CardListing<M extends MarketType = MarketType> {
@@ -13,6 +13,8 @@ export type ListingBaseAttributes = Readonly<{
   name: string
   printing: CardPrinting
   euroCents: number
+  condition: CardCondition
+  language: string
   foil: boolean
   seller: string
   // condition: string,
