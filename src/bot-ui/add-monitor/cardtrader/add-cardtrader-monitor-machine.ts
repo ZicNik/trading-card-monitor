@@ -32,7 +32,7 @@ function mapYesNoAnyPayload(payload: string): boolean | undefined {
   switch (payload) {
     case choiceYesPayload: return true
     case choiceNoPayload: return false
-    case choiceAnyLabel: return undefined
+    case choiceAnyPayload: return undefined
     default: throw new Error(`Unexpected "${payload}" payload from yes/no/any choice.`)
   }
 }
@@ -45,7 +45,7 @@ function yesNoAnyLabel(choice: boolean | undefined): string {
 }
 const yesNoAnyKeyboard = ReplyKeyboard.from([
   [[choiceYesLabel, choiceYesPayload], [choiceNoLabel, choiceNoPayload]],
-  [choiceAnyLabel, choiceAnyPayload],
+  [[choiceAnyLabel, choiceAnyPayload]],
 ])
 
 const askForMinConditionMessage = 'What minimum conditions must the card meet?'
@@ -141,10 +141,10 @@ export const addCardTraderMonitorMachine = setup({
     ).toActor(),
     askForLanguage: Message.withText(askForLanguageMessage, {
       keyboard: (() => {
-        const languageButtons = languages.map(l => [ReplyKeyboardButton.create(languageLabel(l), l)])
+        const languageButtons = languages.map(l => ReplyKeyboardButton.create(languageLabel(l), l))
         return [
-          ...languageButtons.slice(0, 4),
-          ...languageButtons.slice(4),
+          languageButtons.slice(0, 4),
+          languageButtons.slice(4),
           [ReplyKeyboardButton.create(choiceAnyLabel, choiceAnyPayload)],
         ]
       })(),
@@ -255,7 +255,7 @@ export const addCardTraderMonitorMachine = setup({
         message: [{
           guard: 'isValidMaxPrice',
           actions: assign({ maxPrice: ({ event }) => event.text }),
-          target: 'askingForFoil',
+          target: 'askingForMinCondition',
         }, {
           guard: not('isValidMaxPrice'),
           target: 'showingMaxPriceError',
