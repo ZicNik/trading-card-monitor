@@ -129,6 +129,7 @@ async function testCardMonitorRepository() {
     cardName: 'Black Lotus',
     baseFilters: {
       maxEuroCents: 1000,
+      minCondition: 'played',
       printings: [
         { setName: '', setCode: 'LEA', collectorNum: '233', url: '' },
         { setName: '', setCode: 'LEB', collectorNum: '233', url: '' },
@@ -142,6 +143,8 @@ async function testCardMonitorRepository() {
     cardName: 'Lightning Bolt',
     baseFilters: {
       maxEuroCents: 200,
+      language: 'EN',
+      minCondition: 'played',
       printings: [
         { setName: '', setCode: 'LEA', collectorNum: '100', url: '' },
         { setName: '', setCode: 'LEB', collectorNum: '101', url: '' },
