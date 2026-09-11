@@ -1,6 +1,6 @@
 import { ValueObject } from '@/common/utilities'
 
-import { CardPrinting, type CardPrintingProps } from './card'
+import { CardCondition, CardPrinting, type CardPrintingProps } from './card'
 import type { CardListing, ListingBaseAttributes } from './card-listing'
 import type { DomainEvent } from './domain-event'
 import type { MarketType, MonitorMarketFilters, MonitorMarketFiltersProps } from './market'
@@ -37,6 +37,8 @@ export class CardMonitor<M extends MarketType = MarketType> {
 export class MonitorBaseFilters extends ValueObject<MonitorBaseFiltersProps> {
   readonly printings: readonly CardPrinting[]
   get maxEuroCents() { return this.props.maxEuroCents }
+  get minCondition() { return this.props.minCondition }
+  get language() { return this.props.language }
   get foil() { return this.props.foil }
 
   constructor(props: MonitorBaseFiltersProps) {
@@ -47,6 +49,9 @@ export class MonitorBaseFilters extends ValueObject<MonitorBaseFiltersProps> {
   isMatchedBy(attributes: ListingBaseAttributes): boolean {
     return this.printings.some(p => p.isEqual(attributes.printing))
       && attributes.euroCents <= this.maxEuroCents
+      && (this.minCondition === undefined
+        || CardCondition.compare(attributes.condition, this.minCondition) >= 0)
+      && (this.language === undefined || attributes.language === this.language)
       && (this.foil === undefined || attributes.foil === this.foil)
   }
 }
@@ -55,9 +60,9 @@ export class MonitorBaseFilters extends ValueObject<MonitorBaseFiltersProps> {
 export type MonitorBaseFiltersProps = Readonly<{
   printings: readonly CardPrintingProps[]
   maxEuroCents: number
+  minCondition?: CardCondition
+  language?: string
   foil?: boolean
-  // minCondition?: undefined
-  // language?: string
   // sellerCountry?: string
 }>
 
