@@ -9,6 +9,8 @@ export const cardMonitorsTable = sqliteTable('card_monitors', {
   user_id: text().notNull().references(() => usersTable.id),
   card_name: text().notNull(),
   max_euro_cents: integer().notNull(),
+  min_condition: text(),
+  language: text(),
   foil: integer(),
   target_cardtrader: integer().notNull(),
 })

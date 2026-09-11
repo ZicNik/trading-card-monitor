@@ -1,6 +1,8 @@
-import { CardTraderMonitorFilters, type CardTraderMonitorFiltersProps } from '@/cardtrader'
-import { CardMonitor, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorCreationArgs, type CardMonitorRepository, type CardPrintingProps, type MarketType } from '@/core'
 import { eq, inArray } from 'drizzle-orm'
+
+import type { CardTraderMonitorFiltersProps } from '@/cardtrader'
+import { CardCondition, CardMonitor, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorCreationArgs, type CardMonitorRepository, type CardPrintingProps, type MarketType } from '@/core'
+
 import { DRIZZLE_DB } from '../db'
 import { cardMonitorsTable, cardtraderMonitorFiltersTable, monitoredPrintingsTable } from '../schema'
 import { fromDbBoolean, toDbBoolean } from '../utils'
@@ -17,6 +19,8 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
     const printings = await DRIZZLE_DB.select()
       .from(monitoredPrintingsTable)
       .where(eq(monitoredPrintingsTable.card_monitor_id, id))
+    if (printings.length === 0)
+      return undefined
     // CardTrader
     if (fromDbBoolean(monitor.target_cardtrader)) {
       const filters = (await DRIZZLE_DB.select()
@@ -24,7 +28,9 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
         .where(eq(cardtraderMonitorFiltersTable.card_monitor_id, id))
         .limit(1)
       )[0]
-      return selectToCardTraderCardMonitor(monitor, printings, filters)
+      if (filters === undefined)
+        return undefined
+      return selectToCardTraderMonitor(monitor, printings, filters)
     }
     return undefined
   }
@@ -37,35 +43,17 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
     const printings = await DRIZZLE_DB.select()
       .from(monitoredPrintingsTable)
       .where(inArray(monitoredPrintingsTable.card_monitor_id, monitorIds))
-    return [
-      ...(await this.getCardTraderMonitorsFor(monitors, printings)),
-    ]
+    const cardtraderFiltersArray = await DRIZZLE_DB.select()
+      .from(cardtraderMonitorFiltersTable)
+      .where(inArray(cardtraderMonitorFiltersTable.card_monitor_id, monitorIds))
+    return selectToCardMonitors(monitors, printings, cardtraderFiltersArray)
   }
 
   async getAll(): Promise<CardMonitor[]> {
     const monitors = await DRIZZLE_DB.select().from(cardMonitorsTable)
-    const monitorIds = monitors.map(m => m.id)
-    const printings = await DRIZZLE_DB.select()
-      .from(monitoredPrintingsTable)
-      .where(inArray(monitoredPrintingsTable.card_monitor_id, monitorIds))
-    return [
-      ...(await this.getCardTraderMonitorsFor(monitors, printings)),
-    ]
-  }
-
-  private async getCardTraderMonitorsFor(monitors: SelectCardMonitor[], printings: SelectMonitoredPrinting[]): Promise<CardMonitor<'cardtrader'>[]> {
-    const ctMonitors = monitors.filter(m => fromDbBoolean(m.target_cardtrader))
-    const ctMonitorIds = ctMonitors.map(m => m.id)
-    const ctFilters = await DRIZZLE_DB.select()
-      .from(cardtraderMonitorFiltersTable)
-      .where(inArray(cardtraderMonitorFiltersTable.card_monitor_id, ctMonitorIds))
-    return ctMonitors
-      .map(m => selectToCardTraderCardMonitor(
-        m,
-        printings.filter(p => p.card_monitor_id === m.id),
-        ctFilters.find(f => f.card_monitor_id === m.id),
-      ))
-      .filter((m): m is CardMonitor<'cardtrader'> => m !== undefined)
+    const printings = await DRIZZLE_DB.select().from(monitoredPrintingsTable)
+    const cardtraderFiltersArray = await DRIZZLE_DB.select().from(cardtraderMonitorFiltersTable)
+    return selectToCardMonitors(monitors, printings, cardtraderFiltersArray)
   }
 
   async createAndSave<T extends MarketType = MarketType>(args: CardMonitorCreationArgs<T>): Promise<CardMonitor<T>> {
@@ -102,32 +90,62 @@ type SelectCardTraderMonitorFilter = typeof cardtraderMonitorFiltersTable.$infer
 
 // MARK: - Mappers
 
-function selectToCardTraderCardMonitor(
+function selectToPrintings(printings: SelectMonitoredPrinting[]): CardPrintingProps[] {
+  return printings.map(p => ({
+    setName: p.set_name,
+    setCode: p.set_code,
+    collectorNum: p.coll_num,
+    url: p.url,
+  }))
+}
+
+function selectToCardTraderFilters(filters: SelectCardTraderMonitorFilter): CardTraderMonitorFiltersProps {
+  return {
+    market: 'cardtrader',
+    ...(filters.ct_zero !== null ? { ctZero: fromDbBoolean(filters.ct_zero) } : {}),
+  }
+}
+
+function selectToCardTraderMonitor(
   monitor: SelectCardMonitor,
   printings: SelectMonitoredPrinting[],
-  filters?: SelectCardTraderMonitorFilter,
-): CardMonitor<'cardtrader'> | undefined {
-  return filters !== undefined
-    ? new CardMonitor(
-        monitor.id,
-        monitor.user_id,
-        monitor.card_name,
-        new MonitorBaseFilters({
-          maxEuroCents: monitor.max_euro_cents,
-          printings: printings.map(p => ({
-            setName: p.set_name,
-            setCode: p.set_code,
-            collectorNum: p.coll_num,
-            url: p.url,
-          })),
-          ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
-        }),
-        new CardTraderMonitorFilters({
-          market: 'cardtrader',
-          ...(filters.ct_zero !== null ? { ctZero: fromDbBoolean(filters.ct_zero) } : {}),
-        }),
-      )
-    : undefined
+  filters: SelectCardTraderMonitorFilter,
+): CardMonitor {
+  return new CardMonitor(
+    monitor.id,
+    monitor.user_id,
+    monitor.card_name,
+    new MonitorBaseFilters({
+      printings: selectToPrintings(printings),
+      maxEuroCents: monitor.max_euro_cents,
+      ...(monitor.min_condition !== null ? { minCondition: monitor.min_condition as CardCondition } : {}),
+      ...(monitor.language !== null ? { language: monitor.language } : {}),
+      ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
+    }),
+    MonitorMarketFilters.create(selectToCardTraderFilters(filters)),
+  )
+}
+
+function selectToCardMonitors(
+  monitors: SelectCardMonitor[],
+  printings: SelectMonitoredPrinting[],
+  cardtraderFiltersArray: SelectCardTraderMonitorFilter[],
+): CardMonitor[] {
+  const result: CardMonitor[] = []
+  for (const monitor of monitors) {
+    const monitorPrintings = printings
+      .filter(p => p.card_monitor_id === monitor.id)
+    if (monitorPrintings.length === 0)
+      continue
+    // CardTrader
+    if (fromDbBoolean(monitor.target_cardtrader)) {
+      const filters = cardtraderFiltersArray.find(f => f.card_monitor_id === monitor.id)
+      if (filters === undefined)
+        continue
+      result.push(selectToCardTraderMonitor(monitor, monitorPrintings, filters))
+    }
+  }
+  return result
 }
 
 function createToCardMonitor<T extends MarketType = MarketType>(id: number, args: CardMonitorCreationArgs<T>): CardMonitor<T> {
@@ -145,6 +163,8 @@ function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCrea
     user_id: args.userId,
     card_name: args.cardName,
     max_euro_cents: args.baseFilters.maxEuroCents,
+    ...(args.baseFilters.minCondition !== undefined ? { min_condition: args.baseFilters.minCondition } : {}),
+    ...(args.baseFilters.language !== undefined ? { language: args.baseFilters.language } : {}),
     ...(args.baseFilters.foil !== undefined ? { foil: toDbBoolean(args.baseFilters.foil) } : {}),
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     target_cardtrader: toDbBoolean(args.marketFilters.market === 'cardtrader'),
