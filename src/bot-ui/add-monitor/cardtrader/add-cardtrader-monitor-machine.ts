@@ -4,6 +4,7 @@ import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo
 
 import { ReplyKeyboard, ReplyKeyboardButton } from '@/bot-ui/bot-output'
 import { EditedMessage, Message } from '@/bot-ui/views'
+import type { CardCondition } from '@/core'
 import type { AddMonitorInput } from '@/use-cases'
 
 import { printingId, printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
@@ -408,11 +409,20 @@ function toAddMonitorInput(context: AddCardTraderMonitorMachineContext): AddMoni
     baseFilters: {
       printings: context.printingsSelection!.printings.filter(p => p.selected),
       maxEuroCents: Math.round(parseFloat(context.maxPrice!) * 100),
+      ...(context.minCondition !== undefined ? { minCondition: toCardCondition(context.minCondition) } : {}),
+      ...(context.language !== undefined ? { language: context.language } : {}),
       ...(context.foil !== undefined ? { foil: context.foil } : {}),
     },
     marketFilters: {
       market: 'cardtrader',
       ...(context.ctZero !== undefined ? { ctZero: context.ctZero } : {}),
     },
+  }
+}
+
+function toCardCondition(condition: Condition): CardCondition {
+  switch (condition) {
+    case 'near-mint': return 'near-mint'
+    case 'moderately-played': return 'played'
   }
 }
