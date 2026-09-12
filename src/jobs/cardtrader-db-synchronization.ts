@@ -1,6 +1,7 @@
 import type { CardTraderApis, CardTraderBlueprint, CardTraderExpansion } from '@/cardtrader'
 import { DRIZZLE_DB } from '@/drizzle/db'
 import { cardtraderBlueprintsTable, cardtraderSetsTable } from '@/drizzle/schema'
+import { normalizeSearchKey } from '@/drizzle/utils'
 
 import { sql } from 'drizzle-orm'
 import nodeCron from 'node-cron'
@@ -105,6 +106,7 @@ function cardTraderBlueprintToInsertBlueprint(blueprint: CardTraderBlueprint): I
     ? {
         id: blueprint.id,
         name: blueprint.name,
+        normalized_name: normalizeSearchKey(blueprint.name),
         expansion_id: blueprint.expansion_id,
         coll_num: blueprint.fixed_properties.collector_number,
       }

@@ -15,3 +15,12 @@ export function fromDbBoolean(value: number): boolean {
 export function toDbBoolean(value: boolean): number {
   return value ? 1 : 0
 }
+
+// MARK: - Normalization
+
+export function normalizeSearchKey(input: string): string {
+  return input
+    .normalize('NFKD')
+    .replace(/[^\p{L}\p{N}]/gu, '')
+    .toLowerCase()
+}

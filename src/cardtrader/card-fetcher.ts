@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { Card, CardPrinting } from '@/core'
 import { DRIZZLE_DB } from '@/drizzle/db'
 import { cardtraderBlueprintsTable, cardtraderSetsTable } from '@/drizzle/schema'
+import { normalizeSearchKey } from '@/drizzle/utils'
 import type { CardFetcher } from '@/search'
 
 import { urlFromBlueprintId } from './mappers'
@@ -12,16 +13,17 @@ export class CardTraderCardFetcher implements CardFetcher {
     const dbPrintings = await DRIZZLE_DB
       .select({
         blueprintId: cardtraderBlueprintsTable.id,
+        cardName: cardtraderBlueprintsTable.name,
         collectorNum: cardtraderBlueprintsTable.coll_num,
         setName: cardtraderSetsTable.name,
         setCode: cardtraderSetsTable.code,
       })
       .from(cardtraderBlueprintsTable)
-      .where(eq(cardtraderBlueprintsTable.name, name))
+      .where(eq(cardtraderBlueprintsTable.normalized_name, normalizeSearchKey(name)))
       .innerJoin(cardtraderSetsTable, eq(cardtraderBlueprintsTable.expansion_id, cardtraderSetsTable.id))
-    return dbPrintings.length === 0
-      ? undefined
-      : new Card({ name, printings: dbPrintings.map(selectToCardPrinting) })
+    return dbPrintings[0] !== undefined
+      ? new Card({ name: dbPrintings[0].cardName, printings: dbPrintings.map(selectToCardPrinting) })
+      : undefined
   }
 }
 
