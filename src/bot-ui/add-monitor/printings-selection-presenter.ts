@@ -6,6 +6,7 @@ import type { MessageViewModel } from '../views'
 export type SelectablePrinting = ExactSearchRequestedOutput['printings'][number] & { readonly selected: boolean }
 
 export type PrintingsSelectionState = Readonly<{
+  cardName: string
   printings: readonly SelectablePrinting[]
   submitted: boolean
 }>
@@ -28,6 +29,7 @@ export class PrintingsSelectionPresenter implements ExactSearchRequestedOutputPo
 
   present(output: ExactSearchRequestedOutput): void {
     this.state = {
+      cardName: output.cardName,
       printings: output.printings.map(p => ({ ...p, selected: false })),
       submitted: false,
     }

@@ -192,7 +192,10 @@ export const addCardTraderMonitorMachine = setup({
         onError: 'printingsFetchError',
         onDone: {
           target: 'askingForPrintingsSelection',
-          actions: assign({ printingsSelection: ({ event }) => event.output }),
+          actions: assign({
+            cardName: ({ event }) => event.output.cardName,
+            printingsSelection: ({ event }) => event.output,
+          }),
         },
       },
     },
