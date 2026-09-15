@@ -8,7 +8,7 @@ export class ProcessActiveMonitorsUseCase {
   ) {}
 
   async execute(): Promise<void> {
-    const monitors = await this.repo.getAll()
+    const monitors = await this.repo.getAllActive()
     const cardNames = new Set(monitors.map(m => m.cardName))
     const listingsByCardName = new Map<string, CardListing[]>()
     for (const name of cardNames)

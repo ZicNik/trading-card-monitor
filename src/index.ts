@@ -188,6 +188,7 @@ function testCardMonitorMatches() {
       market: 'cardtrader',
       ctZero: true,
     }),
+    new Date(),
   )
   const l1 = new CardListing(1,
     {

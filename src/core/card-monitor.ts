@@ -16,7 +16,13 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public readonly cardName: string,
     public baseFilters: MonitorBaseFilters,
     public marketFilters: MonitorMarketFilters<M>,
+    public expiration: Date,
   ) {}
+
+  /** @param at The moment `expiration` is checked against. Defaults to the time of invocation. */
+  isExpired(at?: Date): boolean {
+    return this.expiration.getTime() > (at?.getTime() ?? Date.now())
+  }
 
   /** Adds a {@link CardMonitorMatched} event if matching listings are found. */
   match(listings: CardListing[]): void {
@@ -92,6 +98,7 @@ export interface CardMonitorRepository {
   findById(id: number): Promise<CardMonitor | undefined>
   findByUserId(userId: string): Promise<CardMonitor[]>
   getAll(): Promise<CardMonitor[]>
+  getAllActive(): Promise<CardMonitor[]>
   createAndSave<T extends MarketType = MarketType>(args: CardMonitorCreationArgs<T>): Promise<CardMonitor<T>>
   delete(id: number): Promise<void>
 }
