@@ -5,6 +5,7 @@ import assert from 'node:assert'
 import { BotUI } from '@/bot-ui/bot-ui'
 import { createCardMonitorMatchNotifier } from '@/bot-ui/notifications'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
+import { APP_CONFIG } from '@/config'
 import { CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { EventBus } from '@/event-bus'
@@ -13,6 +14,7 @@ import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarket
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
+import { SystemClock } from '@/system-time'
 import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {
@@ -34,6 +36,7 @@ import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, NotifyCardMonitorMatc
 // }
 
 // Compose dependencies
+const clock = new SystemClock({ defaultTimezone: APP_CONFIG.defaultTimezone })
 const eventBus = new EventBus()
 const scryfallApis = new ScryfallApis({ timeoutMs: 7000, retries: 3 })
 const scryfallCatalog = new ScryfallCatalog(scryfallApis)
@@ -45,7 +48,7 @@ const cardCatalog = new CardCatalog({
   marketFetchers: { cardtrader: cardTraderCardFetcher },
 })
 const listingCatalog = new CardTraderListingCatalog(cardTraderApis)
-const monitorRepository = new DbCardMonitorRepository()
+const monitorRepository = new DbCardMonitorRepository({ clock })
 const userRepository = new DbUserRepository()
 const botOutputPort = new GrammyOutputPort()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
@@ -123,7 +126,7 @@ async function testCardMonitorRepository() {
   // Make sure these users exist in the database, or the foreign key constraint will fail
   const userId1 = '001'
   const userId2 = '002'
-  const repo: CardMonitorRepository = new DbCardMonitorRepository()
+  const repo: CardMonitorRepository = new DbCardMonitorRepository({ clock })
   const m1 = await repo.createAndSave({
     userId: userId1,
     cardName: 'Black Lotus',
@@ -188,7 +191,7 @@ function testCardMonitorMatches() {
       market: 'cardtrader',
       ctZero: true,
     }),
-    new Date(),
+    Temporal.Now.plainDateISO(),
   )
   const l1 = new CardListing(1,
     {

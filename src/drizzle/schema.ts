@@ -8,7 +8,7 @@ export const cardMonitorsTable = sqliteTable('card_monitors', {
   id: integer().primaryKey({ autoIncrement: true }),
   user_id: text().notNull().references(() => usersTable.id),
   card_name: text().notNull(),
-  expiration: integer().notNull(),
+  expiration: text().notNull(),
   max_euro_cents: integer().notNull(),
   min_condition: text(),
   language: text(),

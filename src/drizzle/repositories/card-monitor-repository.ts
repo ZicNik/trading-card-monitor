@@ -1,11 +1,12 @@
-import { eq, gt, inArray } from 'drizzle-orm'
+import { eq, gte, inArray } from 'drizzle-orm'
 
 import type { CardTraderMonitorFiltersProps } from '@/cardtrader'
 import { CardCondition, CardMonitor, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorCreationArgs, type CardMonitorRepository, type CardPrintingProps, type MarketType } from '@/core'
+import type { Clock } from '@/time'
 
 import { DRIZZLE_DB } from '../db'
 import { cardMonitorsTable, cardtraderMonitorFiltersTable, monitoredPrintingsTable } from '../schema'
-import { dbNow, fromDbBoolean, fromDbTimestamp, toDbBoolean, toDbTimestamp } from '../utils'
+import { fromDbBoolean, fromDbDate, toDbBoolean, toDbDate } from '../utils'
 
 /** @see {@link REPOSITORY_DEFAULTS} */
 export type RepositoryConfig = Readonly<{
@@ -18,9 +19,14 @@ export const REPOSITORY_DEFAULTS = {
 
 export class DbCardMonitorRepository implements CardMonitorRepository {
   private readonly config: RepositoryConfig
+  private readonly clock: Clock
 
-  constructor(config: Partial<RepositoryConfig> = {}) {
-    this.config = { ...REPOSITORY_DEFAULTS, ...config }
+  constructor(args: {
+    clock: Clock
+    config?: Partial<RepositoryConfig>
+  }) {
+    this.config = { ...REPOSITORY_DEFAULTS, ...args.config }
+    this.clock = args.clock
   }
 
   async findById(id: number): Promise<CardMonitor | undefined> {
@@ -72,10 +78,10 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
   }
 
   async getAllActive(): Promise<CardMonitor[]> {
-    const now = dbNow()
+    const today = toDbDate(this.clock.today())
     const monitors = await DRIZZLE_DB.select()
       .from(cardMonitorsTable)
-      .where(gt(cardMonitorsTable.expiration, now))
+      .where(gte(cardMonitorsTable.expiration, today))
     const monitorIds = monitors.map(m => m.id)
     const printings = await DRIZZLE_DB.select()
       .from(monitoredPrintingsTable)
@@ -87,7 +93,7 @@ export class DbCardMonitorRepository implements CardMonitorRepository {
   }
 
   async createAndSave<T extends MarketType = MarketType>(args: CardMonitorCreationArgs<T>): Promise<CardMonitor<T>> {
-    const expiration = new Date(Date.now() + this.config.daysToExpire * 86_400_000) // There are 86_400_000ms in a day
+    const expiration = this.clock.today().add({ days: this.config.daysToExpire - 1 })
     const id = (await DRIZZLE_DB.insert(cardMonitorsTable)
       .values(createToInsert(args, expiration))
       .returning({ id: cardMonitorsTable.id }))[0]?.id
@@ -155,7 +161,7 @@ function selectToCardTraderMonitor(
       ...(monitor.foil !== null ? { foil: fromDbBoolean(monitor.foil) } : {}),
     }),
     MonitorMarketFilters.create(selectToCardTraderFilters(filters)),
-    fromDbTimestamp(monitor.expiration),
+    fromDbDate(monitor.expiration),
   )
 }
 
@@ -181,7 +187,7 @@ function selectToCardMonitors(
   return result
 }
 
-function createToCardMonitor<T extends MarketType = MarketType>(id: number, args: CardMonitorCreationArgs<T>, expiration: Date): CardMonitor<T> {
+function createToCardMonitor<T extends MarketType = MarketType>(id: number, args: CardMonitorCreationArgs<T>, expiration: Temporal.PlainDate): CardMonitor<T> {
   return new CardMonitor(
     id,
     args.userId,
@@ -192,11 +198,11 @@ function createToCardMonitor<T extends MarketType = MarketType>(id: number, args
   )
 }
 
-function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCreationArgs<T>, expiration: Date): InsertCardMonitor {
+function createToInsert<T extends MarketType = MarketType>(args: CardMonitorCreationArgs<T>, expiration: Temporal.PlainDate): InsertCardMonitor {
   return {
     user_id: args.userId,
     card_name: args.cardName,
-    expiration: toDbTimestamp(expiration),
+    expiration: toDbDate(expiration),
     max_euro_cents: args.baseFilters.maxEuroCents,
     ...(args.baseFilters.minCondition !== undefined ? { min_condition: args.baseFilters.minCondition } : {}),
     ...(args.baseFilters.language !== undefined ? { language: args.baseFilters.language } : {}),

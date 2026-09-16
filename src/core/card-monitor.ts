@@ -16,12 +16,11 @@ export class CardMonitor<M extends MarketType = MarketType> {
     public readonly cardName: string,
     public baseFilters: MonitorBaseFilters,
     public marketFilters: MonitorMarketFilters<M>,
-    public expiration: Date,
+    public expiration: Temporal.PlainDate,
   ) {}
 
-  /** @param at The moment `expiration` is checked against. Defaults to the time of invocation. */
-  isExpired(at?: Date): boolean {
-    return this.expiration.getTime() > (at?.getTime() ?? Date.now())
+  isExpired(asOf: Temporal.PlainDate): boolean {
+    return Temporal.PlainDate.compare(asOf, this.expiration) > 0
   }
 
   /** Adds a {@link CardMonitorMatched} event if matching listings are found. */

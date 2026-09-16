@@ -16,16 +16,12 @@ export function toDbBoolean(value: boolean): number {
   return value ? 1 : 0
 }
 
-export function fromDbTimestamp(value: number): Date {
-  return new Date(value * 1_000)
+export function fromDbDate(value: string): Temporal.PlainDate {
+  return Temporal.PlainDate.from(value)
 }
 
-export function toDbTimestamp(value: Date): number {
-  return Math.round(value.getTime() / 1_000)
-}
-
-export function dbNow(): number {
-  return Math.round(Date.now() / 1_000)
+export function toDbDate(value: Temporal.PlainDate): string {
+  return value.toString()
 }
 
 // MARK: - Normalization
