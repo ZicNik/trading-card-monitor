@@ -11,6 +11,7 @@ const schema = z.object({
   DB_URL: z.string(),
   REDIS_URL: z.string(),
   CARDTRADER_TOKEN: z.string(),
+  DFLT_TIMEZONE: z.string(),
 })
 
 export const APP_CONFIG = (() => {
@@ -38,5 +39,6 @@ export const APP_CONFIG = (() => {
     dbUrl: data.DB_URL,
     redisUrl: data.REDIS_URL,
     cardtraderToken: data.CARDTRADER_TOKEN,
+    defaultTimezone: data.DFLT_TIMEZONE,
   } as const
 })()
