@@ -1,4 +1,4 @@
-import type { CardMonitorRepository, MonitorBaseFiltersProps, MonitorMarketFiltersProps } from '@/core'
+import type { CardMonitorRepository, MarketType, MonitorBaseFiltersProps, MonitorMarketFiltersProps } from '@/core'
 
 export type AddMonitorInput = Readonly<{
   userId: string
@@ -7,7 +7,13 @@ export type AddMonitorInput = Readonly<{
   marketFilters: MonitorMarketFiltersProps
 }>
 
-export type AddMonitorOutput = Readonly<{ id: number }>
+export type AddMonitorOutput = Readonly<{
+  id: number
+  userId: string
+  cardName: string
+  expiration: Temporal.PlainDate
+  market: MarketType
+}>
 
 export interface AddMonitorOutputPort {
   present(output: AddMonitorOutput): void
@@ -21,13 +27,12 @@ export class AddMonitorUseCase {
 
   async execute(input: AddMonitorInput): Promise<void> {
     const monitor = await this.repo.createAndSave(input)
-    this.outputPort.present({ id: monitor.id })
+    this.outputPort.present({
+      id: monitor.id,
+      userId: monitor.userId,
+      cardName: monitor.cardName,
+      market: monitor.marketFilters.market,
+      expiration: monitor.expiration,
+    })
   }
-}
-
-// MARK: - Utilities
-
-export class AddMonitorDoNothingOutputPort implements AddMonitorOutputPort {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  present(_output: AddMonitorOutput): void {}
 }

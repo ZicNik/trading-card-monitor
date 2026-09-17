@@ -1,8 +1,10 @@
 import { createActor, waitFor, type ActorRefFromLogic, type AnyActorRef, type AnyStateMachine, type Snapshot } from 'xstate'
 
+import type { CardMonitorRepository } from '@/core'
 import type { CardCatalog } from '@/search'
-import { ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, UserRegistrationUseCase, type AddMonitorUseCase } from '@/use-cases'
+import { AddMonitorUseCase, ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, UserRegistrationUseCase } from '@/use-cases'
 
+import { MonitorAddedPresenter } from './add-monitor/monitor-added-presenter'
 import { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
 import type { BotInputPort } from './bot-input'
 import type { BotOutputPort } from './bot-output'
@@ -16,7 +18,7 @@ export class BotUI {
     private readonly inputPort: BotInputPort,
     private readonly outputPort: BotOutputPort,
     private readonly userRegistrationUseCase: UserRegistrationUseCase,
-    private readonly addMonitorUseCase: AddMonitorUseCase,
+    private readonly monitorRepo: CardMonitorRepository,
     private readonly cardCatalog: CardCatalog,
   ) {}
 
@@ -35,6 +37,8 @@ export class BotUI {
 
   private async send(chatId: string, event: RootMachineEvent): Promise<void> {
     const snapshot = await this.storage.hydrate(chatId)
+    const monitorAddedPresenter = new MonitorAddedPresenter()
+    const addMonitorUseCase = new AddMonitorUseCase(monitorAddedPresenter, this.monitorRepo)
     const fuzzySearchPresenter = new FuzzySearchPresenter()
     const fuzzySearchRequestedUseCase = new FuzzySearchRequestedUseCase(fuzzySearchPresenter, this.cardCatalog)
     const printingsSelectionPresenter = new PrintingsSelectionPresenter()
@@ -46,11 +50,12 @@ export class BotUI {
     // Initialize the actor system's environment
     actor.system.env = {
       outputPort: this.outputPort,
-      addMonitorUseCase: this.addMonitorUseCase,
+      addMonitorUseCase,
+      monitorAddedPresenter,
       fuzzySearchRequestedUseCase,
       fuzzySearchPresenter,
-      printingsSelectionPresenter,
       exactSearchRequestedUseCase,
+      printingsSelectionPresenter,
     }
     actor.start()
     actor.send(event)

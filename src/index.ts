@@ -15,7 +15,7 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
 import { SystemClock } from '@/system-time'
-import { AddMonitorDoNothingOutputPort, AddMonitorUseCase, NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
+import { NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -52,7 +52,6 @@ const monitorRepository = new DbCardMonitorRepository({ clock })
 const userRepository = new DbUserRepository()
 const botOutputPort = new GrammyOutputPort()
 const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
-const addMonitorUseCase = new AddMonitorUseCase(new AddMonitorDoNothingOutputPort(), monitorRepository)
 const notifyMonitorMatchUseCase = new NotifyCardMonitorMatchUseCase(
   createCardMonitorMatchNotifier(botOutputPort),
   monitorRepository,
@@ -62,7 +61,7 @@ const botUI = new BotUI(
   new GrammyInputPort(),
   botOutputPort,
   userRegistrationUseCase,
-  addMonitorUseCase,
+  monitorRepository,
   cardCatalog,
 )
 

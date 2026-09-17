@@ -163,7 +163,7 @@ export const addCardTraderMonitorMachine = setup({
     ).toActor(),
     addMonitor: fromPromise(({ input, system }: { input: AddMonitorInput, system: ActorSystem<ActorSystemInfo> }) =>
       system.env.addMonitorUseCase.execute(input)),
-    showAddMonitorSuccess: Message.withText('Well done! The card monitor was successfully set.').toActor(),
+    showAddMonitorSuccess: Message.withViewModel(({ env }) => env.monitorAddedPresenter.vm).toActor(),
     showAddMonitorError: Message.withText('Oops... Something went wrong and the card monitor couldn\'t be correctly set. You can try again later.').toActor(),
   },
 }).createMachine({
