@@ -15,9 +15,7 @@ export class MonitorAddedPresenter implements AddMonitorOutputPort {
   private state!: MonitorAddedState
   get vm(): MonitorAddedViewModel {
     return {
-      text: `You are all set\\!
-
-_${this.state.cardName}_ will be tracked on ${formatMarket(this.state.market)} through *${formatDate(this.state.expiration)}*\\.
+      text: `You are all set\\! _${this.state.cardName}_ will be tracked on ${formatMarket(this.state.market)} through *${formatDate(this.state.expiration)}*\\.
 You will be notified as soon as a match is found\\.`,
       options: { formatting: 'markdown' },
     }
