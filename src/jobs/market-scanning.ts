@@ -11,7 +11,6 @@ export function startMarketScanning(
     cardMonitorRepo: CardMonitorRepository
     cardListingCatalog: CardListingCatalog
     publisher: DomainEventPublisher
-
   }): void {
   const useCase = new ProcessActiveMonitorsUseCase(
     dependencies.cardMonitorRepo,

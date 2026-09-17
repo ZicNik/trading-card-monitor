@@ -10,7 +10,7 @@ import { CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBase
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { EventBus } from '@/event-bus'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
-import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarketScanning } from '@/jobs'
+import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarketScanning, startMonitorsCleanup } from '@/jobs'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
@@ -86,6 +86,7 @@ const botUI = new BotUI(
 //   cardListingCatalog: listingCatalog,
 //   publisher: eventBus,
 // })
+// startMonitorsCleanup()
 
 // botUI.start()
 
