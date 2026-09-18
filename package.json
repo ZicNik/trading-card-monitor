@@ -9,13 +9,13 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@libsql/client": "^0.17.3",
-    "dotenv": "^17.2.3",
+    "@libsql/client": "^0.18.0",
+    "dotenv": "^18.0.0",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "grammy": "^1.39.3",
     "ioredis": "^6.0.0",
-    "limiter": "^3.0.0",
+    "limiter": "^4.1.0",
     "node-cron": "^4.6.0",
     "xstate": "^5.26.0",
     "zod": "^4.3.6"
@@ -28,7 +28,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.3.0",
     "globals": "^17.0.0",
-    "tsdown": "^0.22.9",
+    "tsdown": "^0.23.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.48.1"
   },
