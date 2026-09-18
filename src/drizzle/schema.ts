@@ -15,6 +15,7 @@ export const cardMonitorsTable = sqliteTable('card_monitors', {
   foil: integer(),
   target_cardtrader: integer().notNull(),
 }, table => [
+  index('user_idx').on(table.user_id),
   index('expiration_idx').on(table.expiration),
 ])
 
