@@ -1,6 +1,8 @@
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
+
 import { addMonitorMachine, addMonitorMachineId } from '../add-monitor/add-monitor-machine'
 import { searchMachine, searchMachineId } from '../search/search-machine'
+import { Message } from '../views'
 
 export type RootMachineEvent
   = | { type: 'command', command: string }
@@ -21,6 +23,7 @@ export const rootMachine = setup({
   guards: {
     isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',
     isAddMonitorCommand: ({ event }) => event.type === 'command' && event.command === 'monitor',
+    isListCommand: ({ event }) => event.type === 'command' && event.command === 'list',
     hasActiveChild: ({ context }) => context.activeChild !== undefined,
   },
   actions: {
@@ -37,6 +40,7 @@ export const rootMachine = setup({
   actors: {
     searchMachine,
     addMonitorMachine,
+    listActor: Message.withText('\'list\' command is under development yet.').toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
@@ -63,6 +67,13 @@ export const rootMachine = setup({
         onDone: { target: 'idle' },
       },
     },
+    listActiveMonitors: {
+      invoke: {
+        src: 'listActor',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: { target: 'idle' },
+      },
+    },
   },
   on: {
     command: [{
@@ -71,6 +82,9 @@ export const rootMachine = setup({
     }, {
       guard: 'isAddMonitorCommand',
       target: '.addMonitor',
+    }, {
+      guard: 'isListCommand',
+      target: '.listActiveMonitors',
     }],
     message: {
       guard: 'hasActiveChild',

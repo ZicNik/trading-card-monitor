@@ -23,9 +23,10 @@ export class BotUI {
   ) {}
 
   start(): void {
-    this.inputPort.onAny(context => this.handleUserRegistration(context.userId), {})
-    this.inputPort.onCommand('search', context => this.send(context.chatId, { type: 'command', command: 'search' }), {})
-    this.inputPort.onCommand('monitor', context => this.send(context.chatId, { type: 'command', command: 'monitor' }), {})
+    this.inputPort.onAny(context => this.handleUserRegistration(context.userId), {});
+    ['monitor', 'search', 'list'].forEach((command) => {
+      this.inputPort.onCommand(command, context => this.send(context.chatId, { type: 'command', command }), {})
+    })
     this.inputPort.onMessage(context => this.send(context.chatId, { type: 'message', text: context.text }), {})
     this.inputPort.onButtonPress(context => this.send(context.chatId, { type: 'buttonPress', payload: context.payload }), {})
   }
