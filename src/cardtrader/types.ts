@@ -13,8 +13,10 @@ declare module '@/core' {
   }
 }
 
+export type CardTraderType = typeof CT_MARKET_ID
+
 export type CardTraderListingAttributes = Readonly<{
-  market: typeof CT_MARKET_ID
+  market: CardTraderType
   ctZero: boolean
 }>
 
@@ -30,7 +32,7 @@ export class CardTraderMonitorFilters extends ValueObject<CardTraderMonitorFilte
 }
 
 export type CardTraderMonitorFiltersProps = Readonly<{
-  market: typeof CT_MARKET_ID
+  market: CardTraderType
   ctZero?: boolean
 }>
 
