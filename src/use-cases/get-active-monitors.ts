@@ -16,6 +16,7 @@ export type MonitorRecap = Readonly<{
   language?: string
   foil?: boolean
   marketDetails: MarketDetailsRecap
+  expiration: Temporal.PlainDate
 }>
 
 export type PrintingRecap = Readonly<{
