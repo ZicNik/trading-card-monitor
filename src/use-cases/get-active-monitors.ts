@@ -1,22 +1,48 @@
+import type { CardTraderType } from '@/cardtrader'
+import type { CardCondition } from '@/core'
+
 export type GetActiveMonitorsQuery = Readonly<{
   userId: string
 }>
 
-export type MonitorRecap = Readonly<{}>
+export type GetActiveMonitorsResult = readonly MonitorRecap[]
 
-export type GetActiveMonitorsOuput = readonly MonitorRecap[]
+export type MonitorRecap = Readonly<{
+  id: number
+  cardName: string
+  printings: readonly PrintingRecap[]
+  maxEuroCents: number
+  minCondition?: CardCondition
+  language?: string
+  foil?: boolean
+  marketDetails: MarketDetailsRecap
+}>
 
-export interface GetActiveMonitorsDataReader {
-  read(query: GetActiveMonitorsQuery): Promise<GetActiveMonitorsOuput>
+export type PrintingRecap = Readonly<{
+  setName: string
+  setCode: string
+  collectorNum: string
+  url: string
+}>
+
+export type MarketDetailsRecap = CardTraderDetailsRecap
+
+export type CardTraderDetailsRecap = Readonly<{
+  market: CardTraderType
+  ctZero?: boolean
+}>
+
+export interface GetActiveMonitorsReader {
+  read(query: GetActiveMonitorsQuery): Promise<GetActiveMonitorsResult>
 }
 
 export interface GetActiveMonitorsOuputPort {
-  present(output: GetActiveMonitorsOuput): void
+  present(result: GetActiveMonitorsResult): void
 }
 
 export class GetActiveMonitorsUseCase {
   constructor(
-    private readonly reader: GetActiveMonitorsDataReader,
+    private readonly reader: GetActiveMonitorsReader,
     private readonly outputPort: GetActiveMonitorsOuputPort,
   ) {}
 
