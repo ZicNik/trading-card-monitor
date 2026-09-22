@@ -1,7 +1,7 @@
 import type { CreateRootMachineInput, RootMachineEvent } from '@/bot-ui'
-import { Message } from '@/bot-ui/views'
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
 import { addMonitorMachine, addMonitorMachineId } from '../add-monitor/add-monitor-machine'
+import { listMonitorsMachine, listMonitorsMachineId } from '../list-monitors/list-monitors-machine'
 import { searchMachine, searchMachineId } from '../search/search-machine'
 
 export const rootMachine = setup({
@@ -33,7 +33,7 @@ export const rootMachine = setup({
   actors: {
     searchMachine,
     addMonitorMachine,
-    listActor: Message.withText('\'list\' command is under development yet.').toActor(),
+    listMonitorsMachine,
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
@@ -60,9 +60,10 @@ export const rootMachine = setup({
         onDone: { target: 'idle' },
       },
     },
-    listActiveMonitors: {
+    listMonitors: {
       invoke: {
-        src: 'listActor',
+        systemId: listMonitorsMachineId,
+        src: 'listMonitorsMachine',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: { target: 'idle' },
       },
@@ -77,7 +78,7 @@ export const rootMachine = setup({
       target: '.addMonitor',
     }, {
       guard: 'isListCommand',
-      target: '.listActiveMonitors',
+      target: '.listMonitors',
     }],
     message: {
       guard: 'hasActiveChild',
