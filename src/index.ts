@@ -13,9 +13,9 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
 import { SystemClock } from '@/system-time'
-import { BotUI } from '@/ui/bot-ui'
+import { createUI } from '@/ui'
 import { createCardMonitorMatchNotifier } from '@/ui/notifications'
-import { NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
+import { NotifyCardMonitorMatchUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -48,22 +48,21 @@ const cardCatalog = new CardCatalog({
   marketFetchers: { cardtrader: cardTraderCardFetcher },
 })
 const listingCatalog = new CardTraderListingCatalog(cardTraderApis)
-const monitorRepository = new DbCardMonitorRepository({ clock })
-const userRepository = new DbUserRepository()
+const monitorRepo = new DbCardMonitorRepository({ clock })
+const userRepo = new DbUserRepository()
 const botOutputPort = new GrammyOutputPort()
-const userRegistrationUseCase = new UserRegistrationUseCase(userRepository)
 const notifyMonitorMatchUseCase = new NotifyCardMonitorMatchUseCase(
   createCardMonitorMatchNotifier(botOutputPort),
-  monitorRepository,
+  monitorRepo,
 )
-const botUI = new BotUI(
-  new RedisStateMachineStorage(),
-  new GrammyInputPort(),
-  botOutputPort,
-  userRegistrationUseCase,
-  monitorRepository,
+const UI = createUI({
+  inputPort: new GrammyInputPort(),
+  outputPort: new GrammyOutputPort(),
+  storage: new RedisStateMachineStorage(),
+  userRepo,
+  monitorRepo,
   cardCatalog,
-)
+})
 
 // Register handlers
 // eventBus.subscribe('cardMonitorMatched', event => notifyMonitorMatchUseCase.execute({
@@ -88,7 +87,7 @@ const botUI = new BotUI(
 // })
 // startMonitorsCleanup()
 
-// botUI.start()
+// UI.start()
 
 async function testCardCatalog() {
   const prototype = await cardCatalog.fuzzySearch('subtle')

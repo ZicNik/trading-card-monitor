@@ -1,8 +1,7 @@
+import type { MessageViewModel } from '@/bot-ui/views'
 import { formatDate, formatMarket } from '@/common/utilities'
 import type { MarketType } from '@/core'
 import type { AddMonitorOutput, AddMonitorOutputPort } from '@/use-cases'
-
-import type { MessageViewModel } from '../views'
 
 type MonitorAddedState = Readonly<{
   cardName: string
