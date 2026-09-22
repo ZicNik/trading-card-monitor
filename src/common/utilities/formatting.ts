@@ -1,4 +1,5 @@
-import type { MarketType } from '@/core'
+import { conditionToCardTraderCondition } from '@/cardtrader/mappers'
+import type { CardCondition, MarketType } from '@/core'
 
 export function formatEuroCents(cents: number): string {
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' })
@@ -13,4 +14,11 @@ export function formatMarket(market: MarketType): string {
 }
 export function formatDate(date: Temporal.PlainDate): string {
   return date.toLocaleString('en-GB', { month: 'long', day: 'numeric' })
+}
+
+export function formatCondition(condition: CardCondition, market: MarketType): string {
+  switch (market) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    case 'cardtrader': return conditionToCardTraderCondition(condition)
+  }
 }
