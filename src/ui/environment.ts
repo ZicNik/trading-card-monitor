@@ -1,7 +1,8 @@
-import type { AddMonitorUseCase, ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase } from '@/use-cases'
+import type { AddMonitorUseCase, ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, GetActiveMonitorsUseCase } from '@/use-cases'
 
 import type { MonitorAddedPresenter } from './add-monitor/monitor-added-presenter'
 import type { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
+import type { ListMonitorsPresenter } from './list-monitors/list-monitors-presenter'
 import type { FuzzySearchPresenter } from './search/fuzzy-search-presenter'
 
 declare module '@/bot-ui' {
@@ -12,5 +13,7 @@ declare module '@/bot-ui' {
     fuzzySearchPresenter: FuzzySearchPresenter
     exactSearchRequestedUseCase: ExactSearchRequestedUseCase
     printingsSelectionPresenter: PrintingsSelectionPresenter
+    getActiveMonitorsUseCase: GetActiveMonitorsUseCase
+    listMonitorsPresenter: ListMonitorsPresenter
   }
 }

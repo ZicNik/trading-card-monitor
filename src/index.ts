@@ -16,6 +16,7 @@ import { SystemClock } from '@/system-time'
 import { createUI } from '@/ui'
 import { createCardMonitorMatchNotifier } from '@/ui/notifications'
 import { NotifyCardMonitorMatchUseCase } from '@/use-cases'
+import { GetActiveMonitorsDbReader } from './drizzle/queries/get-active-monitors'
 
 // class TestUserRepository implements UserRepository {
 //   private readonly users = new Map<string, User>()
@@ -62,6 +63,7 @@ const UI = createUI({
   userRepo,
   monitorRepo,
   cardCatalog,
+  activeMonitorsReader: new GetActiveMonitorsDbReader(clock),
 })
 
 // Register handlers
