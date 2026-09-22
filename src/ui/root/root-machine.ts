@@ -1,19 +1,12 @@
+import type { CreateRootMachineInput, RootMachineEvent } from '@/bot-ui'
+import { Message } from '@/bot-ui/views'
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
-
 import { addMonitorMachine, addMonitorMachineId } from '../add-monitor/add-monitor-machine'
 import { searchMachine, searchMachineId } from '../search/search-machine'
-import { Message } from '../views'
-
-export type RootMachineEvent
-  = | { type: 'command', command: string }
-    | { type: 'message', text: string }
-    | { type: 'buttonPress', payload: string }
 
 export const rootMachine = setup({
   types: {
-    input: {} as {
-      chatId: string
-    },
+    input: {} as CreateRootMachineInput,
     context: {} as {
       chatId: string
       activeChild?: string

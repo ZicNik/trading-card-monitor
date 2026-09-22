@@ -1,8 +1,8 @@
 import { formatEuroCents } from '@/common/utilities'
 import type { MatchNotificationListingData, NotifyCardMonitorMatchOutput, NotifyCardMonitorMatchOutputPort } from '@/use-cases'
 
-import type { BotOutputPort } from '../bot-output'
-import type { MessageViewModel } from '../views'
+import type { BotOutputPort } from '@/bot-ui/output'
+import type { MessageViewModel } from '@/bot-ui/views'
 
 export type MatchNotificationViewModel = MessageViewModel & { readonly chatId: string }
 

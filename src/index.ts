@@ -2,8 +2,6 @@
 
 import assert from 'node:assert'
 
-import { BotUI } from '@/bot-ui/bot-ui'
-import { createCardMonitorMatchNotifier } from '@/bot-ui/notifications'
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { APP_CONFIG } from '@/config'
 import { CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
@@ -15,6 +13,8 @@ import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
 import { SystemClock } from '@/system-time'
+import { BotUI } from '@/ui/bot-ui'
+import { createCardMonitorMatchNotifier } from '@/ui/notifications'
 import { NotifyCardMonitorMatchUseCase, UserRegistrationUseCase } from '@/use-cases'
 
 // class TestUserRepository implements UserRepository {

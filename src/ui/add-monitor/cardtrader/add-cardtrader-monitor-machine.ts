@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
-import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
-
-import { ReplyKeyboard, ReplyKeyboardButton } from '@/bot-ui/bot-output'
+import { ReplyKeyboard, ReplyKeyboardButton } from '@/bot-ui/output'
 import { EditedMessage, Message } from '@/bot-ui/views'
 import type { CardCondition } from '@/core'
 import type { AddMonitorInput } from '@/use-cases'
-
+import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 import { printingId, printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
 export const addCardTraderMonitorMachineId = 'addCardTraderMonitorMachine'

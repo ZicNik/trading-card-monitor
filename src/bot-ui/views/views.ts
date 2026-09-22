@@ -1,6 +1,7 @@
 import { fromPromise, type AnyActorLogic, type PromiseActorLogic } from 'xstate'
-import type { BotEnvironment } from './bot-environment'
-import type { MessageInfo, MessageOptions } from './bot-output'
+
+import type { BotEnvironment } from '../bot-environment'
+import type { MessageInfo, MessageOptions } from '../output'
 
 /** A view that is able to turn into actor logic for a state machine. */
 export interface ActorView<A extends AnyActorLogic> {

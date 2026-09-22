@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
+import { Message } from '@/bot-ui/views'
 import { assign, fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
-import { Message } from '../views'
 
 export const searchMachineId = 'searchMachine'
 

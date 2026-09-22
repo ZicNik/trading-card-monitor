@@ -1,6 +1,6 @@
 import type { StateMachine } from 'xstate'
 
-import type { BotInput } from './bot-input'
+import type { BotInput } from './input'
 
 export type RootMachineEvent = BotInput
 

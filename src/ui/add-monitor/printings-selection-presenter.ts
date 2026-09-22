@@ -1,7 +1,7 @@
 import type { ExactSearchRequestedOutput, ExactSearchRequestedOutputPort } from '@/use-cases'
 
-import { ReplyKeyboardButton, type ReplyKeyboard } from '../bot-output'
-import type { MessageViewModel } from '../views'
+import { ReplyKeyboardButton, type ReplyKeyboard } from '@/bot-ui/output'
+import type { MessageViewModel } from '@/bot-ui/views'
 
 export type SelectablePrinting = ExactSearchRequestedOutput['printings'][number] & { readonly selected: boolean }
 

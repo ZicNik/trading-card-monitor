@@ -1,7 +1,7 @@
 import { InlineKeyboard } from 'grammy'
 import type { Message } from 'grammy/types'
 
-import type { BotOutputPort, MessageFormatting, MessageInfo, MessageOptions, ReplyKeyboard } from '@/bot-ui/bot-output'
+import type { BotOutputPort, MessageFormatting, MessageInfo, MessageOptions, ReplyKeyboard } from '@/bot-ui/output'
 
 import { GRAMMY_BOT } from './bot'
 

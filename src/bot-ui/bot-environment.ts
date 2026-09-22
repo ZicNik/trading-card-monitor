@@ -1,5 +1,6 @@
 import type { ActorSystemInfo } from 'xstate'
-import type { BotOutputPort } from './bot-output'
+
+import type { BotOutputPort } from './output'
 
 /**
  * Container for system-wide, non-serializable dependencies. Ideal for services and other shared utilities.

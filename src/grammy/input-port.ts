@@ -1,4 +1,5 @@
-import type { BotInputContext, BotInputFilter, BotInputHandler, BotInputPort, BotInputType } from '@/bot-ui/bot-input'
+import type { BotInputContext, BotInputFilter, BotInputHandler, BotInputPort, BotInputType } from '@/bot-ui/input'
+
 import { GRAMMY_BOT } from './bot'
 
 /** @see {@link https://grammy.dev/guide/middleware} */
