@@ -16,9 +16,10 @@ export type MessageViewModel = Readonly<{
 }>
 
 export type MessageActorInput<Input = unknown> = { chatId: string } & Input
+export type MessageActorOutput = MessageInfo
 
 /** View representing a new chat message. */
-export class Message<Input = unknown> implements ActorView<MessageInfo, MessageActorInput<Input>> {
+export class Message<Input = unknown> implements ActorView<MessageActorOutput, MessageActorInput<Input>> {
   private constructor(
     private readonly viewmodelBuilder: ({ input, env }: { input: Input, env: BotEnvironment }) => MessageViewModel,
   ) {}
@@ -35,7 +36,7 @@ export class Message<Input = unknown> implements ActorView<MessageInfo, MessageA
     return new Message(viewmodelBuilder)
   }
 
-  toActor(): PromiseActorLogic<MessageInfo, MessageActorInput<Input>> {
+  toActor(): PromiseActorLogic<MessageActorOutput, MessageActorInput<Input>> {
     return fromPromise(({ input, system }) => {
       const vm = this.viewmodelBuilder({ input, env: system.env })
       return system.env.outputPort.sendMessage(input.chatId, vm.text, vm.options)

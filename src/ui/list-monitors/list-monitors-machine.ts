@@ -1,5 +1,5 @@
-import { Message } from '@/bot-ui/views'
-import { setup } from 'xstate'
+import { CombinedView, Message, type MessageActorInput, type MessageActorOutput } from '@/bot-ui/views'
+import { fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 
 export const listMonitorsMachineId = 'listMonitorsMachine'
 
@@ -13,17 +13,37 @@ export const listMonitorsMachine = setup({
     },
   },
   actors: {
-    showUnderDevelopment: Message.withText('/list is under development.').toActor(),
+    fetchMonitors: fromPromise(({ input, system }: { input: { userId: string }, system: ActorSystem<ActorSystemInfo> }) =>
+      system.env.getActiveMonitorsUseCase.execute({ userId: input.userId })),
+    showMonitors: CombinedView.fromBuilder<MessageActorOutput, MessageActorInput>(({ env }) =>
+      env.listMonitorsPresenter.vm.map(vm => Message.withViewModel(() => vm))).toActor(),
+    showError: Message.withText('Something went wrong. You can try again later.').toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({
     chatId: input.chatId,
   }),
-  initial: 'showingUnderDevelopment',
+  initial: 'fetchingMonitors',
   states: {
-    showingUnderDevelopment: {
+    fetchingMonitors: {
       invoke: {
-        src: 'showUnderDevelopment',
+        src: 'fetchMonitors',
+        input: ({ context }) => ({ userId: context.chatId }),
+        onDone: { target: 'showingMonitors' },
+        onError: { target: 'showiwingError' },
+      },
+    },
+    showingMonitors: {
+      invoke: {
+        src: 'showMonitors',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: { target: 'done' },
+        onError: { target: 'showingError' },
+      },
+    },
+    showingError: {
+      invoke: {
+        src: 'showError',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: { target: 'done' },
       },
