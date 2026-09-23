@@ -25,28 +25,30 @@ export class ListMonitorsPresenter implements GetActiveMonitorsOuputPort {
 const noMonitorsText = 'You have no active monitors, at the moment.'
 
 function monitorText(monitor: MonitorRecap): string {
-  return `<em>${monitor.cardName}</em>`
+  return `<em>${monitor.cardName}</em>\n`
     + printingsListText(monitor.printings)
     + textFor('Max Price', monitor.maxEuroCents, formatEuroCents)
     + textFor('Min Condition', monitor.minCondition, c => formatCondition(c, monitor.marketDetails.market))
-    + textFor('Language', monitor.language, toString)
+    + textForString('Language', monitor.language)
     + textForBoolean('Foil', monitor.foil)
     + marketDetailsText(monitor.marketDetails)
     + textFor('Valid through', monitor.expiration, formatDate)
 }
 
 function printingsListText(printings: readonly PrintingRecap[]): string {
-  return `\n<ul>
-${printings.map(printingText).join('\n')}
-</ul>`
+  return printings.map(printingText).join('\n')
 }
 
 function printingText(p: PrintingRecap): string {
-  return `<li><a href="${p.url}"><u>${p.setName}  [${p.setCode} ${p.collectorNum}]</u></a></li>`
+  return `<a href="${p.url}"><u>${p.setName}  [${p.setCode} ${p.collectorNum}]</u></a>`
 }
 
 function textFor<V>(title: string, value: V | undefined, formatting: (v: V) => string): string {
   return value === undefined ? '' : `\n<b>${title}:</b> ${formatting(value)}`
+}
+
+function textForString(title: string, value: string | undefined): string {
+  return textFor(title, value, v => v)
 }
 
 function textForBoolean(title: string, value: boolean | undefined): string {
