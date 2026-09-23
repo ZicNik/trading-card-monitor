@@ -1,4 +1,4 @@
-import { conditionToCardTraderCondition } from '@/cardtrader/mappers'
+import { conditionToCardTraderCondition } from '@/cardtrader'
 import type { CardCondition, MarketType } from '@/core'
 
 export function formatEuroCents(cents: number): string {

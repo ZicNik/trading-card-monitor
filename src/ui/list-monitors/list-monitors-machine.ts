@@ -30,7 +30,7 @@ export const listMonitorsMachine = setup({
         src: 'fetchMonitors',
         input: ({ context }) => ({ userId: context.chatId }),
         onDone: { target: 'showingMonitors' },
-        onError: { target: 'showiwingError' },
+        onError: { target: 'showingError' },
       },
     },
     showingMonitors: {
