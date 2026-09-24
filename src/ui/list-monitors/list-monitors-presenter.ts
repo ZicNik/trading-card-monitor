@@ -1,5 +1,5 @@
 import type { MessageViewModel } from '@/bot-ui/views'
-import { formatCondition, formatDate, formatEuroCents } from '@/common/utilities'
+import { formatCondition, formatDate, formatEuroCents, formatLanguage } from '@/common/utilities'
 import type { CardTraderDetailsRecap, GetActiveMonitorsOuputPort, GetActiveMonitorsResult, MarketDetailsRecap, MonitorRecap, PrintingRecap } from '@/use-cases'
 
 type ListMonitorsState = GetActiveMonitorsResult
@@ -29,7 +29,7 @@ function monitorText(monitor: MonitorRecap): string {
     + printingsListText(monitor.printings)
     + textFor('Max Price', monitor.maxEuroCents, formatEuroCents)
     + textFor('Min Condition', monitor.minCondition, c => formatCondition(c, monitor.marketDetails.market))
-    + textForString('Language', monitor.language)
+    + textFor('Language', monitor.language, formatLanguage)
     + textForBoolean('Foil', monitor.foil)
     + marketDetailsText(monitor.marketDetails)
     + textFor('Valid through', monitor.expiration, formatDate)
@@ -45,10 +45,6 @@ function printingText(p: PrintingRecap): string {
 
 function textFor<V>(title: string, value: V | undefined, formatting: (v: V) => string): string {
   return value === undefined ? '' : `\n<b>${title}:</b> ${formatting(value)}`
-}
-
-function textForString(title: string, value: string | undefined): string {
-  return textFor(title, value, v => v)
 }
 
 function textForBoolean(title: string, value: boolean | undefined): string {

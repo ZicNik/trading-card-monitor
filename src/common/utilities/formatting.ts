@@ -22,3 +22,7 @@ export function formatCondition(condition: CardCondition, market: MarketType): s
     case 'cardtrader': return conditionToCardTraderCondition(condition)
   }
 }
+
+export function formatLanguage(language: string): string {
+  return language.toUpperCase()
+}
