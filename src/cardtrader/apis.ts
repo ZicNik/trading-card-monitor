@@ -12,7 +12,7 @@ export type CardTraderApisConfig = Readonly<{
 export const APIS_DEFAULTS = {
   timeoutMs: 30_000,
   retries: 2,
-  throttling: { tokensPerInterval: 70, intervalMs: 5000 },
+  throttling: { tokensPerInterval: 10, intervalMs: 1000 },
 } as const
 
 /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference} */
