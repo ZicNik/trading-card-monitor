@@ -10,6 +10,9 @@ export const GRAMMY_BOT = new Bot(APP_CONFIG.botToken)
 const server = express()
 server.use(express.json())
 server.use(webhookCallback(GRAMMY_BOT, 'express'))
+server.get('/ping', (_, res) => {
+  res.status(200).send('pong')
+})
 if (APP_CONFIG.tls !== undefined) {
   const cert = fs.readFileSync(APP_CONFIG.tls.certPath)
   const key = fs.readFileSync(APP_CONFIG.tls.keyPath)
