@@ -9,7 +9,7 @@ export const GRAMMY_BOT = new Bot(APP_CONFIG.botToken)
 
 const server = express()
 server.use(express.json())
-server.use(webhookCallback(GRAMMY_BOT, 'express'))
+server.use(`/${APP_CONFIG.botToken}`, webhookCallback(GRAMMY_BOT, 'express'))
 server.get('/ping', (_, res) => {
   res.status(200).send('pong')
 })
@@ -21,3 +21,6 @@ if (APP_CONFIG.tls !== undefined) {
 else {
   http.createServer(server).listen(APP_CONFIG.port)
 }
+
+GRAMMY_BOT.api.setWebhook(`https://${APP_CONFIG.webhookDomain}/${APP_CONFIG.botToken}`)
+  .catch(console.error)
