@@ -67,29 +67,29 @@ const UI = createUI({
 })
 
 // Register handlers
-// eventBus.subscribe('cardMonitorMatched', event => notifyMonitorMatchUseCase.execute({
-//   monitorId: event.monitorId,
-//   listings: event.listings.map(l => ({
-//     setName: l.baseAttributes.printing.setName,
-//     setCode: l.baseAttributes.printing.setCode,
-//     collectorNum: l.baseAttributes.printing.collectorNum,
-//     url: l.baseAttributes.printing.url,
-//     seller: l.baseAttributes.seller,
-//     euroCents: l.baseAttributes.euroCents,
-//     foil: l.baseAttributes.foil,
-//   })),
-// }))
+eventBus.subscribe('cardMonitorMatched', event => notifyMonitorMatchUseCase.execute({
+  monitorId: event.monitorId,
+  listings: event.listings.map(l => ({
+    setName: l.baseAttributes.printing.setName,
+    setCode: l.baseAttributes.printing.setCode,
+    collectorNum: l.baseAttributes.printing.collectorNum,
+    url: l.baseAttributes.printing.url,
+    seller: l.baseAttributes.seller,
+    euroCents: l.baseAttributes.euroCents,
+    foil: l.baseAttributes.foil,
+  })),
+}))
 
 // Start cron jobs
-// startCardTraderDbSynchronization({ apis: cardTraderApis })
-// startMarketScanning({
-//   cardMonitorRepo: monitorRepository,
-//   cardListingCatalog: listingCatalog,
-//   publisher: eventBus,
-// })
-// startMonitorsCleanup()
+startCardTraderDbSynchronization({ apis: cardTraderApis })
+startMarketScanning({
+  cardMonitorRepo: monitorRepo,
+  cardListingCatalog: listingCatalog,
+  publisher: eventBus,
+})
+startMonitorsCleanup()
 
-// UI.start()
+UI.start()
 
 async function testCardCatalog() {
   const prototype = await cardCatalog.fuzzySearch('subtle')
