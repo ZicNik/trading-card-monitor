@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import assert from 'node:assert'
+import 'temporal-polyfill/global'
 
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { APP_CONFIG } from '@/config'

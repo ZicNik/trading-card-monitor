@@ -17,6 +17,7 @@
     "ioredis": "^6.0.0",
     "limiter": "^4.1.0",
     "node-cron": "^4.6.0",
+    "temporal-polyfill": "^1.0.5",
     "xstate": "^5.26.0",
     "zod": "^4.3.6"
   },
