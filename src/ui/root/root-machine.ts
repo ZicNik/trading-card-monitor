@@ -13,7 +13,7 @@ const startMessage = `<b>HOW IT WORKS</b>
 <b>GET STARTED</b>
 • Tap /track to create your first alert.
 • Tap /alerts to manage your active tracking list.
-• Tap /card to look up exact spelling & details.
+• Tap /card to look up exact spelling and details.
 
 <b>Tip:</b> You can also type commands manually, or select them from the dedicated menu.`
 

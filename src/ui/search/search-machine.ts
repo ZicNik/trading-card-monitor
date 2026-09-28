@@ -5,6 +5,9 @@ import { assign, fromPromise, setup, type ActorSystem, type ActorSystemInfo } fr
 
 export const searchMachineId = 'searchMachine'
 
+const askForQueryText = 'Which card are you looking for?\nDon\'t worry about exact spelling or typing the whole name. I\'ll find the closest match.'
+const showErrorText = 'I couldn\'t find a match for that, but you can try again. Type just a part of the name you are sure about.'
+
 export const searchMachine = setup({
   types: {
     input: {} as {
@@ -17,11 +20,11 @@ export const searchMachine = setup({
     events: {} as { type: 'message', text: string },
   },
   actors: {
-    askForQuery: Message.withText('Which card are you looking for?').toActor(),
+    askForQuery: Message.withText(askForQueryText).toActor(),
     search: fromPromise(({ input, system }: { input: { query: string }, system: ActorSystem<ActorSystemInfo> }) =>
       system.env.fuzzySearchRequestedUseCase.execute(input.query)),
     showResult: Message.withViewModel(({ env }) => env.fuzzySearchPresenter.vm).toActor(),
-    showError: Message.withText('No card found with this name. Try again.').toActor(),
+    showError: Message.withText(showErrorText).toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({ chatId: input.chatId }),
