@@ -1,8 +1,21 @@
 import type { CreateRootMachineInput, RootMachineEvent } from '@/bot-ui'
+import { Message } from '@/bot-ui/views'
 import { assign, forwardTo, setup, type AnyActorRef } from 'xstate'
 import { addMonitorMachine, addMonitorMachineId } from '../add-monitor/add-monitor-machine'
 import { listMonitorsMachine, listMonitorsMachineId } from '../list-monitors/list-monitors-machine'
 import { searchMachine, searchMachineId } from '../search/search-machine'
+
+const startMessage = `<b>HOW IT WORKS</b>
+1. <b>Search</b> — Pick your card name and printings.
+2. <b>Filter</b> — Set your preferences.
+3. <b>Relax</b> — I'll scan the market and ping you the moment it drops.
+
+<b>GET STARTED</b>
+• Tap /track to create your first alert.
+• Tap /alerts to manage your active tracking list.
+• Tap /card to look up exact spelling & details.
+
+<b>Tip:</b> You can also type commands manually, or select them from the dedicated menu.`
 
 export const rootMachine = setup({
   types: {
@@ -14,9 +27,10 @@ export const rootMachine = setup({
     events: {} as RootMachineEvent,
   },
   guards: {
-    isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',
+    isStartCommand: ({ event }) => event.type === 'command' && event.command === 'start',
     isAddMonitorCommand: ({ event }) => event.type === 'command' && event.command === 'monitor',
     isListCommand: ({ event }) => event.type === 'command' && event.command === 'list',
+    isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',
     hasActiveChild: ({ context }) => context.activeChild !== undefined,
   },
   actions: {
@@ -31,6 +45,7 @@ export const rootMachine = setup({
     }),
   },
   actors: {
+    showStartMessage: Message.withText(startMessage, { formatting: 'html' }).toActor(),
     searchMachine,
     addMonitorMachine,
     listMonitorsMachine,
@@ -42,11 +57,9 @@ export const rootMachine = setup({
     idle: {
       entry: assign({ activeChild: () => undefined }),
     },
-    search: {
-      entry: assign({ activeChild: () => searchMachineId }),
+    start: {
       invoke: {
-        systemId: searchMachineId,
-        src: 'searchMachine',
+        src: 'showStartMessage',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: { target: 'idle' },
       },
@@ -68,9 +81,21 @@ export const rootMachine = setup({
         onDone: { target: 'idle' },
       },
     },
+    search: {
+      entry: assign({ activeChild: () => searchMachineId }),
+      invoke: {
+        systemId: searchMachineId,
+        src: 'searchMachine',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: { target: 'idle' },
+      },
+    },
   },
   on: {
     command: [{
+      guard: 'isStartCommand',
+      target: '.start',
+    }, {
       guard: 'isSearchCommand',
       target: '.search',
     }, {
