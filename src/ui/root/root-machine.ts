@@ -28,9 +28,9 @@ export const rootMachine = setup({
   },
   guards: {
     isStartCommand: ({ event }) => event.type === 'command' && event.command === 'start',
-    isAddMonitorCommand: ({ event }) => event.type === 'command' && event.command === 'monitor',
-    isListCommand: ({ event }) => event.type === 'command' && event.command === 'list',
-    isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'search',
+    isAddMonitorCommand: ({ event }) => event.type === 'command' && event.command === 'track',
+    isListCommand: ({ event }) => event.type === 'command' && event.command === 'alerts',
+    isSearchCommand: ({ event }) => event.type === 'command' && event.command === 'card',
     hasActiveChild: ({ context }) => context.activeChild !== undefined,
   },
   actions: {

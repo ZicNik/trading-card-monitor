@@ -27,7 +27,7 @@ export function createUI({ inputPort, outputPort, storage, userRepo, monitorRepo
     storage,
     rootMachine,
     environment: () => createEnvironment({ outputPort, monitorRepo, cardCatalog, activeMonitorsReader }),
-    commands: ['start', 'monitor', 'search', 'list'],
+    commands: ['start', 'track', 'alerts', 'card'],
     onAnyInput: { handler: userRegistrationHandler(new UserRegistrationUseCase(userRepo)) },
   })
 }
