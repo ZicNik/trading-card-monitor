@@ -19,8 +19,11 @@ export function startCardTraderDbSynchronization(
     ...(config !== undefined ? { config } : {}),
   })
   const task = nodeCron.schedule('5 0 3-31/3 * *', async () => {
-    console.log('Synchronizing CardTrader sets and blueprints')
+    console.log('Starting CardTrader sets and blueprints synchronization')
+    const start = Date.now()
     await synchonizer.syncSetsAndBlueprints()
+    const seconds = (Date.now() - start) / 1000
+    console.log(`Finished CardTrader sets and blueprints synchronization in ${seconds}s`)
   })
   void task.execute()
 }
@@ -32,8 +35,8 @@ export type CardTraderDbSynchronizerConfig = Readonly<{
 }>
 
 export const SYNCHRONIZER_DEFAULTS = {
-  httpBatchSize: 25,
-  dbBatchSize: 250,
+  httpBatchSize: 5,
+  dbBatchSize: 100,
 } as const
 
 /** Synchronizes data from CardTrader to the application database. */
@@ -51,29 +54,40 @@ export class CardTraderDbSynchronizer {
 
   /** Loads or updates the application's set and blueprint tables with the latest data from CardTrader. */
   async syncSetsAndBlueprints(): Promise<void> {
-    const expansions = await this.apis.expansions()
-    if (expansions === undefined || expansions.length === 0)
-      return
-    const blueprints: CardTraderBlueprint[] = []
-    await performBatched(expansions, this.config.httpBatchSize, async (batch) => {
-      blueprints.push(...(await Promise.allSettled(batch.map(e => this.apis.blueprints(e.id))))
-        .filter((r): r is PromiseFulfilledResult<CardTraderBlueprint[]> =>
-          r.status === 'fulfilled' && r.value !== undefined)
-        .flatMap(r => r.value))
-    })
-    const setInserts = expansions.map(cardTraderExpansionToInsertSet)
+    const setIds = await this.syncSets()
+    await this.syncBlueprintsForSets(setIds)
+  }
+
+  /** @returns Set ids */
+  private async syncSets(): Promise<number[]> {
+    const expansions = (await this.apis.expansions() ?? [])
+      .map(cardTraderExpansionToInsertSet)
+    if (expansions.length === 0)
+      return []
     await DRIZZLE_DB.insert(cardtraderSetsTable)
-      .values(setInserts)
+      .values(expansions)
       .onConflictDoUpdate({
         target: cardtraderSetsTable.id,
         set: { code: sql`EXCLUDED.code`, name: sql`EXCLUDED.name` },
       })
-    const blueprintInserts = blueprints.map(cardTraderBlueprintToInsertBlueprint)
-      .filter((b): b is InsertBlueprint => b !== undefined)
-    await performBatched(blueprintInserts, this.config.dbBatchSize, async (batch) => {
-      await DRIZZLE_DB.insert(cardtraderBlueprintsTable)
-        .values(batch)
-        .onConflictDoNothing()
+    return expansions.map(e => e.id)
+  }
+
+  private async syncBlueprintsForSets(setIds: number[]): Promise<void> {
+    await performBatched(setIds, this.config.httpBatchSize, async (setBatch) => {
+      await Promise.allSettled(setBatch.map(async (setId) => {
+        const blueprints = await this.apis.blueprints(setId)
+        if (blueprints === undefined)
+          return
+        const inserts = blueprints
+          .map(cardTraderBlueprintToInsertBlueprint)
+          .filter((blueprint): blueprint is InsertBlueprint => blueprint !== undefined)
+        await performBatched(inserts, this.config.dbBatchSize, async (dbBatch) => {
+          await DRIZZLE_DB.insert(cardtraderBlueprintsTable)
+            .values(dbBatch)
+            .onConflictDoNothing()
+        })
+      }))
     })
   }
 }
@@ -87,8 +101,8 @@ async function performBatched<T>(items: T[], batchSize: number, callbackfn: (bat
 
 // MARK: - Types
 
-type InsertSet = typeof cardtraderSetsTable.$inferInsert
-type InsertBlueprint = typeof cardtraderBlueprintsTable.$inferInsert
+type InsertSet = typeof cardtraderSetsTable.$inferSelect
+type InsertBlueprint = typeof cardtraderBlueprintsTable.$inferSelect
 
 // MARK: - Mappers
 
