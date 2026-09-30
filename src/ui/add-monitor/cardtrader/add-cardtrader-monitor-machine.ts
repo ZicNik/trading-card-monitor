@@ -3,7 +3,7 @@
 import { ReplyKeyboard, ReplyKeyboardButton } from '@/bot-ui/output'
 import { EditedMessage, Message } from '@/bot-ui/views'
 import type { CardCondition } from '@/core'
-import type { AddMonitorInput } from '@/use-cases'
+import { CardNotFoundError, type AddMonitorInput } from '@/use-cases'
 import { assign, fromPromise, not, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 import { printingId, printingsSelectAllPayload, printingsSubmissionPayload, type PrintingsSelectionState } from '../printings-selection-presenter'
 
@@ -124,7 +124,8 @@ export const addCardTraderMonitorMachine = setup({
       await system.env.exactSearchRequestedUseCase.execute({ cardName: input.cardName, market: 'cardtrader' })
       return system.env.printingsSelectionPresenter.state
     }),
-    showPrintingsFetchError: Message.withText('Something went wrong. Try again: which card are you loooking for?').toActor(),
+    showCardNotFoundError: Message.withText('I couldn\'t find an exact match for this card\\. Try again\\.\n\n*Tip:* Not sure of the card name? Try /card for a broader search, then come back with that name\\.', { formatting: 'markdown' }).toActor(),
+    showPrintingsFetchGenericError: Message.withText('Something went wrong. You can try again later.').toActor(),
     askForPrintingsSelection: Message.withViewModel(({ env }) => env.printingsSelectionPresenter.vm).toActor(),
     editPrintingsSelection: EditedMessage.withViewModel(({ env }) => env.printingsSelectionPresenter.vm).toActor(),
     askForMaxPrice: Message.withText('What is the maximum price, in euros, you are willing to pay for this card?').toActor(),
@@ -187,7 +188,13 @@ export const addCardTraderMonitorMachine = setup({
       invoke: {
         src: 'fetchPrintings',
         input: ({ context }) => ({ cardName: context.cardName! }),
-        onError: 'printingsFetchError',
+        onError: [
+          {
+            guard: ({ event }) => event.error instanceof CardNotFoundError,
+            target: 'showingCardNotFoundError',
+          },
+          'showingPrintingsFetchGenericError',
+        ],
         onDone: {
           target: 'askingForPrintingsSelection',
           actions: assign({
@@ -197,9 +204,16 @@ export const addCardTraderMonitorMachine = setup({
         },
       },
     },
-    printingsFetchError: {
+    showingCardNotFoundError: {
       invoke: {
-        src: 'showPrintingsFetchError',
+        src: 'showCardNotFoundError',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: 'awaitingForCardName',
+      },
+    },
+    showingPrintingsFetchGenericError: {
+      invoke: {
+        src: 'showPrintingsFetchGenericError',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: 'awaitingForCardName',
       },

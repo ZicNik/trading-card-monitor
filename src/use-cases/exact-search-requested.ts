@@ -24,10 +24,20 @@ export class ExactSearchRequestedUseCase {
   async execute(input: ExactSearchRequestedInput): Promise<void> {
     const card = await this.catalog.getCard(input.cardName, input.market)
     if (card === undefined)
-      throw new Error(`Exact search of ${input.cardName} for ${input.market} market produced no result`)
+      throw new CardNotFoundError(input.cardName, input.market)
     this.outputPort.present({
       cardName: card.name,
       printings: card.printings.map(p => p.toProps()),
     })
+  }
+}
+
+export class CardNotFoundError extends Error {
+  constructor(
+    readonly cardName: string,
+    readonly market?: MarketType,
+  ) {
+    super(`Card "${cardName}" not found${market ? ` on "${market}" market` : ''}`)
+    this.name = 'CardNotFoundError'
   }
 }
