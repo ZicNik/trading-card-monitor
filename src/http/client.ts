@@ -46,7 +46,7 @@ export class HttpClient {
         ? undefined
         : setTimeout(() => { controller.abort() }, timeoutMs)
       try {
-        await this.bucket?.removeToken()
+        await Promise.all([this.bucket?.removeToken(), opts.extraBucket?.removeToken()])
         const resp = await fetch(url, {
           method,
           headers,

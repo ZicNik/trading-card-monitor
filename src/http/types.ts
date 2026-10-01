@@ -17,6 +17,7 @@ export type Request<Body> = Readonly<{
 export type RequestOptions = Readonly<Partial<{
   timeoutMs: number
   retries: number
+  extraBucket: Bucket
 }>>
 
 export type ClientConfig = Readonly<{
