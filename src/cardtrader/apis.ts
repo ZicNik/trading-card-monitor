@@ -7,17 +7,20 @@ export type CardTraderApisConfig = Readonly<{
   timeoutMs: number
   retries: number
   sharedBucket: Bucket
+  marketplaceProductsBucket: Bucket
 }>
 
 export const APIS_DEFAULTS = {
   timeoutMs: 30_000,
   retries: 2,
-  sharedBucket: new Bucket({ capacity: 8, interval: 1000 }),
+  sharedBucket: new Bucket({ capacity: 150, interval: 10000 }),
+  marketplaceProductsBucket: new Bucket({ capacity: 6, interval: 1000 }),
 } as const
 
 /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference} */
 export class CardTraderApis {
   private readonly http: HttpClient
+  private readonly marketplaceProductsBucket: Bucket
 
   constructor(config?: Partial<CardTraderApisConfig>) {
     const cfg = { ...config, ...APIS_DEFAULTS }
@@ -28,6 +31,7 @@ export class CardTraderApis {
       retries: cfg.retries,
       bucket: cfg.sharedBucket,
     }))
+    this.marketplaceProductsBucket = cfg.marketplaceProductsBucket
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#expansions} */
@@ -46,7 +50,9 @@ export class CardTraderApis {
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#marketplace-products} */
   async marketplaceProducts(params: MarketplaceProductsParams): Promise<Record<number, CardTraderProduct[]> | undefined> {
-    return await this.http.perform(createRequest({ path: '/marketplace/products', params }))
+    return await this.http.perform(createRequest({ path: '/marketplace/products', params }), {
+      extraBucket: this.marketplaceProductsBucket,
+    })
   }
 }
 
