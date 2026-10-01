@@ -1,3 +1,5 @@
+import type { Bucket } from './bucket'
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD'
 
 export type Headers = Readonly<Record<string, string>>
@@ -22,10 +24,5 @@ export type ClientConfig = Readonly<{
   defaultHeaders: Headers
   timeoutMs?: number
   retries: number
-  throttling?: ThrottlingConfig
-}>
-
-export type ThrottlingConfig = Readonly<{
-  tokensPerInterval: number
-  intervalMs: number
+  bucket?: Bucket
 }>

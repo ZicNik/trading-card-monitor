@@ -1,19 +1,23 @@
-import { RateLimiter } from 'limiter'
+import type { Bucket } from './bucket'
 import { ApiError, TimeoutError } from './errors'
 import type { ClientConfig, Headers, Request, RequestOptions } from './types'
 import { createClientConfig } from './utils'
 
 /** Client for RESTful APIs. */
 export class HttpClient {
-  private readonly limiter?: RateLimiter
+  private readonly baseUrl: string | undefined
+  private readonly defaultHeaders: Headers
+  private readonly timeoutMs: number | undefined
+  private readonly retries: number
+  private readonly bucket: Bucket | undefined
 
-  public constructor(private readonly config: ClientConfig = createClientConfig()) {
-    if (config.throttling !== undefined) {
-      this.limiter = new RateLimiter({
-        tokensPerInterval: config.throttling.tokensPerInterval,
-        interval: config.throttling.intervalMs,
-      })
-    }
+  public constructor(config?: ClientConfig) {
+    const cfg = config ?? createClientConfig()
+    this.baseUrl = cfg.baseUrl
+    this.defaultHeaders = cfg.defaultHeaders
+    this.timeoutMs = cfg.timeoutMs
+    this.retries = cfg.retries
+    this.bucket = cfg.bucket
   }
 
   public async perform<ReqBody, ResBody = unknown>(req: Request<ReqBody>, opts: RequestOptions = {}): Promise<ResBody | undefined> {
@@ -21,19 +25,19 @@ export class HttpClient {
     // url
     const params = Object.entries(req.params).map(([k, v]) => [k, String(v)])
     const url
-      = (this.config.baseUrl !== undefined ? `${this.config.baseUrl.replace(/\/$/, '')}/` : '')
+      = (this.baseUrl !== undefined ? `${this.baseUrl.replace(/\/$/, '')}/` : '')
         + req.path.replace(/^\//, '')
         + (params.length > 0 ? `?${new URLSearchParams(params)}` : '')
     // headers
-    let headers: Headers = { ...this.config.defaultHeaders, ...req.headers }
+    let headers: Headers = { ...this.defaultHeaders, ...req.headers }
     const hasContentType = Object.keys(headers).some(k => k.toLowerCase() === 'content-type')
     if (req.body !== undefined && !hasContentType)
       headers = { ...headers, 'content-type': 'application/json' }
     // body
     const body = JSON.stringify(req.body)
     // options
-    const timeoutMs = opts.timeoutMs ?? this.config.timeoutMs
-    const retries = opts.retries ?? this.config.retries
+    const timeoutMs = opts.timeoutMs ?? this.timeoutMs
+    const retries = opts.retries ?? this.retries
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       const controller = new AbortController()
@@ -42,7 +46,7 @@ export class HttpClient {
         ? undefined
         : setTimeout(() => { controller.abort() }, timeoutMs)
       try {
-        await this.limiter?.removeTokens(1)
+        await this.bucket?.removeToken()
         const resp = await fetch(url, {
           method,
           headers,

@@ -1,18 +1,18 @@
 import { APP_CONFIG } from '@/config/app-config'
-import { createClientConfig, createRequest, HttpClient, type ThrottlingConfig } from '@/http'
+import { Bucket, createClientConfig, createRequest, HttpClient } from '@/http'
 import { CT_MTG_GAME_ID, type CardTraderBlueprint, type CardTraderExpansion, type CardTraderLanguage, type CardTraderProduct } from './types'
 
 /** @see {@link APIS_DEFAULTS} */
 export type CardTraderApisConfig = Readonly<{
   timeoutMs: number
   retries: number
-  throttling: ThrottlingConfig
+  sharedBucket: Bucket
 }>
 
 export const APIS_DEFAULTS = {
   timeoutMs: 30_000,
   retries: 2,
-  throttling: { tokensPerInterval: 8, intervalMs: 1000 },
+  sharedBucket: new Bucket({ capacity: 8, interval: 1000 }),
 } as const
 
 /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference} */
@@ -20,11 +20,13 @@ export class CardTraderApis {
   private readonly http: HttpClient
 
   constructor(config?: Partial<CardTraderApisConfig>) {
+    const cfg = { ...config, ...APIS_DEFAULTS }
     this.http = new HttpClient(createClientConfig({
       baseUrl: 'https://api.cardtrader.com/api/v2',
       defaultHeaders: { Authorization: `Bearer ${APP_CONFIG.cardtraderToken}` },
-      ...APIS_DEFAULTS,
-      ...config,
+      timeoutMs: cfg.timeoutMs,
+      retries: cfg.retries,
+      bucket: cfg.sharedBucket,
     }))
   }
 
