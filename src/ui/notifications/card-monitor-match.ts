@@ -4,6 +4,8 @@ import type { MatchNotificationListingData, NotifyCardMonitorMatchOutput, Notify
 import type { BotOutputPort } from '@/bot-ui/output'
 import type { MessageViewModel } from '@/bot-ui/views'
 
+const maxPresentedCount = 10
+
 export type MatchNotificationViewModel = MessageViewModel & { readonly chatId: string }
 
 export class CardMonitorMatchNotifier implements NotifyCardMonitorMatchOutputPort {
@@ -19,15 +21,20 @@ export class CardMonitorMatchNotifier implements NotifyCardMonitorMatchOutputPor
 }
 
 function text(cardName: string, listings: readonly MatchNotificationListingData[]): string {
-  return `Match${listings.length > 1 ? 'es' : ''} found for ${cardName}!\n\n`
-    + listings.map(listingText).join('\n\n')
+  const extraListingsCount = listings.length - maxPresentedCount
+  return `<b>Match${listings.length > 1 ? 'es' : ''} found for <em>${cardName}</em>!</b>\n`
+    + (extraListingsCount > 0 ? `<em>(Showing the top ${maxPresentedCount} sorted by price)</em>\n\n` : '\n')
+    + listings
+      .toSorted((a, b) => a.euroCents - b.euroCents)
+      .slice(0, maxPresentedCount)
+      .map(listingText).join('\n\n')
+      + (extraListingsCount > 0 ? `\n\n<em>...and ${extraListingsCount} more result${extraListingsCount > 1 ? 's' : ''}.</em>` : '')
 }
 
 function listingText(listing: MatchNotificationListingData) {
   return `<a href="${listing.url}">${listing.setName} [${listing.setCode} ${listing.collectorNum}]</a>
 <b>Seller:</b> ${listing.seller}
-<b>Price:</b> ${formatEuroCents(listing.euroCents)}
-<b>Foil:</b> ${listing.foil ? 'yes' : 'no'}`
+<b>Price:</b> ${formatEuroCents(listing.euroCents)}`
 }
 
 // MARK: - View
