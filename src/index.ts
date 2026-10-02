@@ -108,14 +108,14 @@ async function testCardCatalog() {
 async function testCardTraderApis() {
   const expansions = await cardTraderApis.expansions()
   console.log(expansions)
-  const expansionId = expansions?.[0]?.id
+  const expansionId = expansions[0]?.id
   if (expansionId === undefined)
     return
   const blueprints = await cardTraderApis.blueprints(expansionId)
   console.log(blueprints)
   const expansionProducts = await cardTraderApis.marketplaceProducts({ expansion_id: expansionId })
   console.log(expansionProducts)
-  const blueprintId = blueprints?.[0]?.id
+  const blueprintId = blueprints[0]?.id
   if (blueprintId === undefined)
     return
   const blueprintProducts = await cardTraderApis.marketplaceProducts({ blueprint_id: blueprintId })

@@ -11,8 +11,6 @@ export class ScryfallCatalog implements CardFuzzySearcher, CardFetcher {
     if (cached !== undefined)
       return cached
     const result = await this.apis.cardsNamed(undefined, name)
-    if (result === undefined)
-      return undefined
     const prototype = toCardPrototype(result)
     if (prototype === undefined)
       return undefined
@@ -25,8 +23,6 @@ export class ScryfallCatalog implements CardFuzzySearcher, CardFetcher {
     if (cached !== undefined)
       return cached
     const result = await this.apis.cardsSearch(`!"${name}"`, 'prints')
-    if (result === undefined)
-      return undefined
     const card = toCard(result.data)
     if (card === undefined)
       return undefined

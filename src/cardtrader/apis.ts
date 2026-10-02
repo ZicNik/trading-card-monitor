@@ -35,13 +35,13 @@ export class CardTraderApis {
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#expansions} */
-  async expansions(): Promise<CardTraderExpansion[] | undefined> {
+  async expansions(): Promise<CardTraderExpansion[]> {
     return (await this.http.perform<undefined, CardTraderExpansion[]>(createRequest({ path: '/expansions' })))
-      ?.filter(e => e.game_id === CT_MTG_GAME_ID)
+      .filter(e => e.game_id === CT_MTG_GAME_ID)
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#blueprints} */
-  async blueprints(expansion_id: number): Promise<CardTraderBlueprint[] | undefined> {
+  async blueprints(expansion_id: number): Promise<CardTraderBlueprint[]> {
     return await this.http.perform(createRequest({
       path: '/blueprints/export',
       params: { expansion_id },
@@ -49,7 +49,7 @@ export class CardTraderApis {
   }
 
   /** @see {@link https://www.cardtrader.com/en/docs/api/full/reference#marketplace-products} */
-  async marketplaceProducts(params: MarketplaceProductsParams): Promise<Record<number, CardTraderProduct[]> | undefined> {
+  async marketplaceProducts(params: MarketplaceProductsParams): Promise<Record<number, CardTraderProduct[]>> {
     return await this.http.perform(createRequest({ path: '/marketplace/products', params }), {
       extraBucket: this.marketplaceProductsBucket,
     })

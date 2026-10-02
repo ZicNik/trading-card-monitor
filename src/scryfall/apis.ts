@@ -20,7 +20,7 @@ export class ScryfallApis {
   }
 
   /** @see {@link https://scryfall.com/docs/api/cards/search} */
-  async cardsSearch(q: string, unique?: 'cards' | 'art' | 'prints' | 'sets'): Promise<{ data: ScryfallCard[] } | undefined> {
+  async cardsSearch(q: string, unique?: 'cards' | 'art' | 'prints' | 'sets'): Promise<{ data: ScryfallCard[] }> {
     return await this.http.perform(createRequest({
       path: '/cards/search',
       params: {
@@ -31,7 +31,7 @@ export class ScryfallApis {
   }
 
   /** @see {@link https://scryfall.com/docs/api/cards/named} */
-  async cardsNamed(exact?: string, fuzzy?: string): Promise<ScryfallCard | undefined> {
+  async cardsNamed(exact?: string, fuzzy?: string): Promise<ScryfallCard> {
     return await this.http.perform(createRequest({
       path: '/cards/named',
       params: {

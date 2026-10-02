@@ -18,7 +18,7 @@ export class CardTraderListingCatalog implements CardListingCatalog {
     const cardName = blueprints[0]?.name
     return cardName !== undefined
       ? (await Promise.all(blueprints.map(async b => [b.id, await this.apis.marketplaceProducts({ blueprint_id: b.id })] as const)))
-          .flatMap(([id, products]) => products?.[id]?.map(p => cardtraderProductToCardListing(cardName, p)) ?? [])
+          .flatMap(([id, products]) => products[id]?.map(p => cardtraderProductToCardListing(cardName, p)) ?? [])
       : []
   }
 }

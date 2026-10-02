@@ -60,7 +60,7 @@ export class CardTraderDbSynchronizer {
 
   /** @returns Set ids */
   private async syncSets(): Promise<number[]> {
-    const expansions = (await this.apis.expansions() ?? [])
+    const expansions = (await this.apis.expansions())
       .map(cardTraderExpansionToInsertSet)
     if (expansions.length === 0)
       return []
@@ -76,10 +76,7 @@ export class CardTraderDbSynchronizer {
   private async syncBlueprintsForSets(setIds: number[]): Promise<void> {
     await performBatched(setIds, this.config.httpBatchSize, async (setBatch) => {
       await Promise.allSettled(setBatch.map(async (setId) => {
-        const blueprints = await this.apis.blueprints(setId)
-        if (blueprints === undefined)
-          return
-        const inserts = blueprints
+        const inserts = (await this.apis.blueprints(setId))
           .map(cardTraderBlueprintToInsertBlueprint)
           .filter((blueprint): blueprint is InsertBlueprint => blueprint !== undefined)
         await performBatched(inserts, this.config.dbBatchSize, async (dbBatch) => {
