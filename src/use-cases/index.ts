@@ -1,4 +1,5 @@
 export * from './add-monitor'
+export * from './delete-monitor'
 export * from './exact-search-requested'
 export * from './fuzzy-search-requested'
 export * from './get-active-monitors'
