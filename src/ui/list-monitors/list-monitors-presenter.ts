@@ -1,3 +1,4 @@
+import { ReplyKeyboard } from '@/bot-ui/output'
 import type { MessageViewModel } from '@/bot-ui/views'
 import { formatCondition, formatDate, formatEuroCents, formatLanguage } from '@/common/utilities'
 import type { CardTraderDetailsRecap, GetActiveMonitorsOuputPort, GetActiveMonitorsResult, MarketDetailsRecap, MonitorRecap, PrintingRecap } from '@/use-cases'
@@ -13,7 +14,11 @@ export class ListMonitorsPresenter implements GetActiveMonitorsOuputPort {
       ? [{ text: noMonitorsText }]
       : this.state.map(monitor => ({
           text: monitorText(monitor),
-          options: { formatting: 'html', linkPreview: false },
+          options: {
+            formatting: 'html',
+            linkPreview: false,
+            keyboard: keyboard(monitor.id),
+          },
         }))
   }
 
@@ -56,6 +61,14 @@ function marketDetailsText(details: MarketDetailsRecap): string {
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     case 'cardtrader': return cardtraderDetailsText(details)
   }
+}
+
+export const deletePayloadPrefix = 'delete-monitor:'
+
+function keyboard(monitorId: number): ReplyKeyboard {
+  return ReplyKeyboard.from([
+    [['DELETE', deletePayloadPrefix + monitorId.toString()]],
+  ])
 }
 
 // MARK: - CardTrader

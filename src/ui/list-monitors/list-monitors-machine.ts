@@ -1,7 +1,12 @@
+import { ReplyKeyboard } from '@/bot-ui/output'
 import { CombinedView, Message, type MessageActorInput, type MessageActorOutput } from '@/bot-ui/views'
-import { fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
+import { assign, fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
+import { deletePayloadPrefix } from './list-monitors-presenter'
 
 export const listMonitorsMachineId = 'listMonitorsMachine'
+
+const deleteYesPayload = 'delete-yes'
+const deleteNoPayload = 'delete-no'
 
 export const listMonitorsMachine = setup({
   types: {
@@ -10,14 +15,28 @@ export const listMonitorsMachine = setup({
     },
     context: {} as {
       chatId: string
+      deleteId?: number
     },
+    events: {} as
+    | { type: 'buttonPress', payload: string },
+  },
+  guards: {
+    isDelete: ({ event }) => event.payload.startsWith(deletePayloadPrefix),
+  },
+  actions: {
+    assignDeleteId: assign({ deleteId: ({ event }) => parseInt(event.payload.slice(deletePayloadPrefix.length)) }),
   },
   actors: {
     fetchMonitors: fromPromise(({ input, system }: { input: { userId: string }, system: ActorSystem<ActorSystemInfo> }) =>
       system.env.getActiveMonitorsUseCase.execute({ userId: input.userId })),
     showMonitors: CombinedView.fromBuilder<MessageActorOutput, MessageActorInput>(({ env }) =>
       env.listMonitorsPresenter.vm.map(vm => Message.withViewModel(() => vm))).toActor(),
-    showError: Message.withText('Something went wrong. You can try again later.').toActor(),
+    askDeleteConfirmation: Message.withText('Are you sure you want to delete this alert?', {
+      keyboard: ReplyKeyboard.from([
+        [['Yes', deleteYesPayload], ['No', deleteNoPayload]],
+      ]),
+    }).toActor(),
+    showGenericError: Message.withText('Something went wrong. You can try again later.').toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -30,24 +49,42 @@ export const listMonitorsMachine = setup({
         src: 'fetchMonitors',
         input: ({ context }) => ({ userId: context.chatId }),
         onDone: { target: 'showingMonitors' },
-        onError: { target: 'showingError' },
+        onError: { target: 'showingFetchingError' },
       },
     },
     showingMonitors: {
       invoke: {
         src: 'showMonitors',
         input: ({ context }) => ({ chatId: context.chatId }),
-        onDone: { target: 'done' },
-        onError: { target: 'showingError' },
+        onDone: { target: 'awaitingUserAction' },
+        onError: { target: 'showingFetchingError' },
       },
     },
-    showingError: {
+    showingFetchingError: {
       invoke: {
-        src: 'showError',
+        src: 'showGenericError',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: { target: 'done' },
       },
     },
+    awaitingUserAction: {
+      on: {
+        buttonPress: {
+          guard: 'isDelete',
+          actions: 'assignDeleteId',
+          target: 'askingDeleteConfirmation',
+        },
+      },
+    },
+    askingDeleteConfirmation: {
+      invoke: {
+        src: 'askDeleteConfirmation',
+        input: ({ context }) => ({ chatId: context.chatId }),
+        onDone: { target: 'awaitingDeleteConfirmation' },
+      },
+    },
+    awaitingDeleteConfirmation: {},
+    deletingMonitor: {},
     done: { type: 'final' },
   },
 })
