@@ -22,6 +22,9 @@ export const listMonitorsMachine = setup({
   },
   guards: {
     isDelete: ({ event }) => event.payload.startsWith(deletePayloadPrefix),
+    isConfirmDelete: ({ event }) => event.payload === deleteYesPayload,
+    isCancelDelete: ({ event }) => event.payload === deleteNoPayload,
+
   },
   actions: {
     assignDeleteId: assign({ deleteId: ({ event }) => parseInt(event.payload.slice(deletePayloadPrefix.length)) }),
@@ -33,7 +36,7 @@ export const listMonitorsMachine = setup({
       env.listMonitorsPresenter.vm.map(vm => Message.withViewModel(() => vm))).toActor(),
     askDeleteConfirmation: Message.withText('Are you sure you want to delete this alert?', {
       keyboard: ReplyKeyboard.from([
-        [['Yes', deleteYesPayload], ['No', deleteNoPayload]],
+        [['Confirm', deleteYesPayload], ['Cancel', deleteNoPayload]],
       ]),
     }).toActor(),
     showGenericError: Message.withText('Something went wrong. You can try again later.').toActor(),
@@ -83,8 +86,19 @@ export const listMonitorsMachine = setup({
         onDone: { target: 'awaitingDeleteConfirmation' },
       },
     },
-    awaitingDeleteConfirmation: {},
+    awaitingDeleteConfirmation: {
+      on: {
+        buttonPress: [{
+          guard: 'isConfirmDelete',
+          target: 'deletingMonitor',
+        }, {
+          guard: 'isCancelDelete',
+          target: 'cancelingDelete',
+        }],
+      },
+    },
     deletingMonitor: {},
+    cancelingDelete: {},
     done: { type: 'final' },
   },
 })
