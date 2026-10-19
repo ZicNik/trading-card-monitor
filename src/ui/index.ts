@@ -3,10 +3,11 @@ import type { BotInputHandler, BotInputPort } from '@/bot-ui/input'
 import type { BotOutputPort } from '@/bot-ui/output'
 import type { CardMonitorRepository } from '@/core'
 import { CardCatalog } from '@/search'
-import { AddMonitorUseCase, ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, GetActiveMonitorsUseCase, UserRegistrationUseCase, type GetActiveMonitorsReader } from '@/use-cases'
+import { AddMonitorUseCase, DeleteMonitorUseCase, ExactSearchRequestedUseCase, FuzzySearchRequestedUseCase, GetActiveMonitorsUseCase, UserRegistrationUseCase, type GetActiveMonitorsReader } from '@/use-cases'
 import type { UserRepository } from '@/user'
 import { MonitorAddedPresenter } from './add-monitor/monitor-added-presenter'
 import { PrintingsSelectionPresenter } from './add-monitor/printings-selection-presenter'
+import { DeleteMonitorPresenter } from './list-monitors/delete-monitor-presenter'
 import { ListMonitorsPresenter } from './list-monitors/list-monitors-presenter'
 import { rootMachine } from './root/root-machine'
 import { FuzzySearchPresenter } from './search/fuzzy-search-presenter'
@@ -46,6 +47,8 @@ function createEnvironment({ outputPort, monitorRepo, cardCatalog, activeMonitor
   const exactSearchRequestedUseCase = new ExactSearchRequestedUseCase(printingsSelectionPresenter, cardCatalog)
   const listMonitorsPresenter = new ListMonitorsPresenter()
   const getActiveMonitorsUseCase = new GetActiveMonitorsUseCase(activeMonitorsReader, listMonitorsPresenter)
+  const deleteMonitorPresenter = new DeleteMonitorPresenter()
+  const deleteMonitorUseCase = new DeleteMonitorUseCase(deleteMonitorPresenter, monitorRepo)
   return {
     outputPort,
     addMonitorUseCase,
@@ -56,6 +59,8 @@ function createEnvironment({ outputPort, monitorRepo, cardCatalog, activeMonitor
     printingsSelectionPresenter,
     getActiveMonitorsUseCase,
     listMonitorsPresenter,
+    deleteMonitorPresenter,
+    deleteMonitorUseCase,
   }
 }
 
