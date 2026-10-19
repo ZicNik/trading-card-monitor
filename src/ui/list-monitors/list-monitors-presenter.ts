@@ -8,7 +8,7 @@ type ListMonitorsState = GetActiveMonitorsResult
 type ListMonitorsViewModel = readonly MessageViewModel[]
 
 export class ListMonitorsPresenter implements GetActiveMonitorsOuputPort {
-  private state!: ListMonitorsState
+  state!: ListMonitorsState
   get vm(): ListMonitorsViewModel {
     return this.state.length === 0
       ? [{ text: noMonitorsText }]
