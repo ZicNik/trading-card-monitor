@@ -74,6 +74,7 @@ export const rootMachine = setup({
       },
     },
     listMonitors: {
+      entry: assign({ activeChild: () => listMonitorsMachineId }),
       invoke: {
         systemId: listMonitorsMachineId,
         src: 'listMonitorsMachine',
