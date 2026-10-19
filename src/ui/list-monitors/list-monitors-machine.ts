@@ -2,6 +2,7 @@
 
 import { ReplyKeyboard } from '@/bot-ui/output'
 import { CombinedView, EditedMessage, Message, type MessageActorInput, type MessageActorOutput } from '@/bot-ui/views'
+import { CardMonitorNotFoundError } from '@/use-cases'
 import { assign, fromPromise, setup, type ActorSystem, type ActorSystemInfo } from 'xstate'
 import { deletePayloadPrefix } from './list-monitors-presenter'
 
@@ -14,6 +15,8 @@ type MonitorInfo = Readonly<{
 
 const deleteYesPayload = 'delete-yes'
 const deleteNoPayload = 'delete-no'
+
+const genericErrorText = 'Something went wrong. Please try again later.'
 
 export const listMonitorsMachine = setup({
   types: {
@@ -33,7 +36,6 @@ export const listMonitorsMachine = setup({
     isDelete: ({ event }) => event.payload.startsWith(deletePayloadPrefix),
     isConfirmDelete: ({ event }) => event.payload === deleteYesPayload,
     isCancelDelete: ({ event }) => event.payload === deleteNoPayload,
-
   },
   actions: {
     assignDeleteId: assign({ deleteId: ({ event }) => parseInt(event.payload.slice(deletePayloadPrefix.length)) }),
@@ -51,6 +53,16 @@ export const listMonitorsMachine = setup({
       }
       return info
     } }),
+    deleteMonitorCleanup: assign({
+      monitorInfoById: ({ context }, params?: { clearMonitorInfo: boolean }) => {
+        if (!params?.clearMonitorInfo)
+          return context.monitorInfoById
+        const { [context.deleteId!]: _, ...newInfo } = context.monitorInfoById
+        return newInfo
+      },
+      deleteId: () => undefined,
+      messageId: () => undefined,
+    }),
   },
   actors: {
     fetchMonitors: fromPromise(({ input, system }: { input: { userId: string }, system: ActorSystem<ActorSystemInfo> }) =>
@@ -67,7 +79,15 @@ export const listMonitorsMachine = setup({
       (input: { cardName: string }) => `The alert for <em>${input.cardName}</em> remains active.`,
       { formatting: 'html' },
     ).toActor(),
-    showGenericError: Message.withText('Something went wrong. You can try again later.').toActor(),
+    deleteMonitor: fromPromise(({ input, system }: { input: { monitorId: number }, system: ActorSystem<ActorSystemInfo> }) =>
+      system.env.deleteMonitorUseCase.execute({ id: input.monitorId })),
+    showDeleteSuccess: EditedMessage.withViewModel(({ env }) => env.deleteMonitorPresenter.vm).toActor(),
+    showingMonitorNotFoundDeleteError: EditedMessage.withDynamicText(
+      (input: { cardName: string }) => `Looks like this alert for <em>${input.cardName}</em> was already removed.`,
+      { formatting: 'html' },
+    ).toActor(),
+    showGenericError: Message.withText(genericErrorText).toActor(),
+    editWithGenericError: EditedMessage.withText(genericErrorText).toActor(),
   },
 }).createMachine({
   context: ({ input }) => ({
@@ -134,11 +154,11 @@ export const listMonitorsMachine = setup({
           target: 'deletingMonitor',
         }, {
           guard: 'isCancelDelete',
-          target: 'cancelingDelete',
+          target: 'showingDeleteCancellation',
         }],
       },
     },
-    cancelingDelete: {
+    showingDeleteCancellation: {
       invoke: {
         src: 'showDeleteCancellation',
         input: ({ context }) => ({
@@ -147,15 +167,59 @@ export const listMonitorsMachine = setup({
           cardName: context.monitorInfoById[context.deleteId!]!.cardName,
         }),
         onDone: {
-          actions: assign({
-            deleteId: () => undefined,
-            messageId: () => undefined,
-          }),
+          actions: 'deleteMonitorCleanup',
           target: 'awaitingUserAction',
         },
       },
     },
-    deletingMonitor: {},
+    deletingMonitor: {
+      invoke: {
+        src: 'deleteMonitor',
+        input: ({ context }) => ({ monitorId: context.deleteId! }),
+        onDone: 'showingDeleteSuccess',
+        onError: [
+          {
+            guard: ({ event }) => event.error instanceof CardMonitorNotFoundError,
+            target: 'showingMonitorNotFoundDeleteError',
+          },
+          'showingGenericDeleteError',
+        ],
+      },
+    },
+    showingDeleteSuccess: {
+      invoke: {
+        src: 'showDeleteSuccess',
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId! }),
+        onDone: {
+          actions: { type: 'deleteMonitorCleanup', params: { clearMonitorInfo: true } },
+          target: 'awaitingUserAction',
+        },
+      },
+    },
+    showingMonitorNotFoundDeleteError: {
+      invoke: {
+        src: 'showingMonitorNotFoundDeleteError',
+        input: ({ context }) => ({
+          chatId: context.chatId,
+          messageId: context.messageId!,
+          cardName: context.monitorInfoById[context.deleteId!]!.cardName,
+        }),
+        onDone: {
+          actions: { type: 'deleteMonitorCleanup', params: { clearMonitorInfo: true } },
+          target: 'awaitingUserAction',
+        },
+      },
+    },
+    showingGenericDeleteError: {
+      invoke: {
+        src: 'editWithGenericError',
+        input: ({ context }) => ({ chatId: context.chatId, messageId: context.messageId! }),
+        onDone: {
+          actions: 'deleteMonitorCleanup',
+          target: 'awaitingUserAction',
+        },
+      },
+    },
     done: { type: 'final' },
   },
 })
