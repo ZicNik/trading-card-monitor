@@ -9,7 +9,6 @@ import { deletePayloadPrefix } from './list-monitors-presenter'
 export const listMonitorsMachineId = 'listMonitorsMachine'
 
 type MonitorInfo = Readonly<{
-  messageId: string
   cardName: string
 }>
 
@@ -17,6 +16,10 @@ const deleteYesPayload = 'delete-yes'
 const deleteNoPayload = 'delete-no'
 
 const genericErrorText = 'Something went wrong. Please try again later.'
+
+function idFromDeletePayload(payload: string): number {
+  return parseInt(payload.slice(deletePayloadPrefix.length))
+}
 
 export const listMonitorsMachine = setup({
   types: {
@@ -30,26 +33,22 @@ export const listMonitorsMachine = setup({
       messageId?: string
     },
     events: {} as
+    | { type: 'message', text: string }
     | { type: 'buttonPress', payload: string },
   },
   guards: {
-    isDelete: ({ event }) => event.payload.startsWith(deletePayloadPrefix),
-    isConfirmDelete: ({ event }) => event.payload === deleteYesPayload,
-    isCancelDelete: ({ event }) => event.payload === deleteNoPayload,
+    noActiveMonitors: ({ context }) => Object.keys(context.monitorInfoById).length === 0,
+    canDelete: ({ context }, params: { payload: string }) => params.payload.startsWith(deletePayloadPrefix)
+      && idFromDeletePayload(params.payload) in context.monitorInfoById,
+    isConfirmDelete: (_, params: { payload: string }) => params.payload === deleteYesPayload,
+    isCancelDelete: (_, params: { payload: string }) => params.payload === deleteNoPayload,
   },
   actions: {
-    assignDeleteId: assign({ deleteId: ({ event }) => parseInt(event.payload.slice(deletePayloadPrefix.length)) }),
-    initMonitorInfo: assign({ monitorInfoById: ({ system }, params: { messageIds: string[] }) => {
-      const monitors = system.env.listMonitorsPresenter.state
-      if (monitors.length !== params.messageIds.length)
-        throw new Error('Counts of fetched and listed monitors don\'t match.')
+    assignDeleteId: assign({ deleteId: (_, params: { payload: string }) => idFromDeletePayload(params.payload) }),
+    initMonitorInfo: assign({ monitorInfoById: ({ system }) => {
       const info: Record<number, MonitorInfo> = {}
-      for (let i = 0; i < monitors.length; i++) {
-        const monitor = monitors[i]!
-        info[monitor.id] = {
-          messageId: params.messageIds[i]!,
-          cardName: monitor.cardName,
-        }
+      for (const monitor of system.env.listMonitorsPresenter.state) {
+        info[monitor.id] = { cardName: monitor.cardName }
       }
       return info
     } }),
@@ -109,11 +108,8 @@ export const listMonitorsMachine = setup({
         src: 'showMonitors',
         input: ({ context }) => ({ chatId: context.chatId }),
         onDone: {
-          actions: {
-            type: 'initMonitorInfo',
-            params: ({ event }) => ({ messageIds: event.output.map(msg => msg.id) }),
-          },
-          target: 'awaitingUserAction',
+          actions: 'initMonitorInfo',
+          target: 'routingAfterShowingMonitors',
         },
         onError: 'showingFetchingError',
       },
@@ -125,11 +121,17 @@ export const listMonitorsMachine = setup({
         onDone: 'done',
       },
     },
+    routingAfterShowingMonitors: {
+      always: [
+        { guard: 'noActiveMonitors', target: 'done' },
+        'awaitingUserAction',
+      ],
+    },
     awaitingUserAction: {
       on: {
         buttonPress: {
-          guard: 'isDelete',
-          actions: 'assignDeleteId',
+          guard: { type: 'canDelete', params: ({ event }) => ({ payload: event.payload }) },
+          actions: { type: 'assignDeleteId', params: ({ event }) => ({ payload: event.payload }) },
           target: 'askingDeleteConfirmation',
         },
       },
@@ -150,10 +152,10 @@ export const listMonitorsMachine = setup({
     awaitingDeleteConfirmation: {
       on: {
         buttonPress: [{
-          guard: 'isConfirmDelete',
+          guard: { type: 'isConfirmDelete', params: ({ event }) => ({ payload: event.payload }) },
           target: 'deletingMonitor',
         }, {
-          guard: 'isCancelDelete',
+          guard: { type: 'isCancelDelete', params: ({ event }) => ({ payload: event.payload }) },
           target: 'showingDeleteCancellation',
         }],
       },
