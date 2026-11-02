@@ -1,15 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
-import assert from 'node:assert'
 import 'temporal-polyfill/global'
 
 import { CardTraderApis, CardTraderCardFetcher, CardTraderListingCatalog } from '@/cardtrader'
 import { APP_CONFIG } from '@/config'
-import { CardListing, CardMonitor, CardMonitorMatched, CardPrinting, MonitorBaseFilters, MonitorMarketFilters, type CardMonitorRepository } from '@/core'
 import { DbCardMonitorRepository, DbUserRepository } from '@/drizzle'
 import { EventBus } from '@/event-bus'
 import { GrammyInputPort, GrammyOutputPort } from '@/grammy'
-import { CardTraderDbSynchronizer, startCardTraderDbSynchronization, startMarketScanning, startMonitorsCleanup } from '@/jobs'
+import { startCardTraderDbSynchronization, startMarketScanning, startMonitorsCleanup } from '@/jobs'
 import { RedisStateMachineStorage } from '@/redis'
 import { ScryfallApis, ScryfallCatalog } from '@/scryfall'
 import { CardCatalog } from '@/search'
@@ -18,24 +14,6 @@ import { createUI } from '@/ui'
 import { createCardMonitorMatchNotifier } from '@/ui/notifications'
 import { NotifyCardMonitorMatchUseCase } from '@/use-cases'
 import { GetActiveMonitorsDbReader } from './drizzle/queries/get-active-monitors'
-
-// class TestUserRepository implements UserRepository {
-//   private readonly users = new Map<string, User>()
-
-//   findById(id: string): Promise<User | undefined> {
-//     let user = this.users.get(id)
-//     if (user === undefined) {
-//       user = new User(id)
-//       this.users.set(id, user)
-//     }
-//     return Promise.resolve(user)
-//   }
-
-//   save(user: User): Promise<void> {
-//     this.users.set(user.id, user)
-//     return Promise.resolve()
-//   }
-// }
 
 // Compose dependencies
 const clock = new SystemClock({ defaultTimezone: APP_CONFIG.defaultTimezone })
@@ -91,174 +69,3 @@ startMarketScanning({
 startMonitorsCleanup()
 
 UI.start()
-
-async function testCardCatalog() {
-  const prototype = await cardCatalog.fuzzySearch('subtle')
-  console.log(prototype)
-  if (prototype === undefined)
-    return
-  const noMarketCard = await cardCatalog.getCard(prototype.name)
-  const cardTraderCard = await cardCatalog.getCard(prototype.name, 'cardtrader')
-  console.log(noMarketCard)
-  console.log(cardTraderCard)
-}
-
-// testCardCatalog().catch(console.error)
-
-async function testCardTraderApis() {
-  const expansions = await cardTraderApis.expansions()
-  console.log(expansions)
-  const expansionId = expansions[0]?.id
-  if (expansionId === undefined)
-    return
-  const blueprints = await cardTraderApis.blueprints(expansionId)
-  console.log(blueprints)
-  const expansionProducts = await cardTraderApis.marketplaceProducts({ expansion_id: expansionId })
-  console.log(expansionProducts)
-  const blueprintId = blueprints[0]?.id
-  if (blueprintId === undefined)
-    return
-  const blueprintProducts = await cardTraderApis.marketplaceProducts({ blueprint_id: blueprintId })
-  console.log(blueprintProducts)
-}
-
-// testCardTraderApis().catch(console.error)
-
-async function testCardMonitorRepository() {
-  // Make sure these users exist in the database, or the foreign key constraint will fail
-  const userId1 = '001'
-  const userId2 = '002'
-  const repo: CardMonitorRepository = new DbCardMonitorRepository({ clock })
-  const m1 = await repo.createAndSave({
-    userId: userId1,
-    cardName: 'Black Lotus',
-    baseFilters: {
-      maxEuroCents: 1000,
-      minCondition: 'played',
-      printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '233', url: '' },
-        { setName: '', setCode: 'LEB', collectorNum: '233', url: '' },
-      ],
-    },
-    marketFilters: { market: 'cardtrader' },
-  })
-  console.log(m1)
-  const m2 = await repo.createAndSave({
-    userId: userId2,
-    cardName: 'Lightning Bolt',
-    baseFilters: {
-      maxEuroCents: 200,
-      language: 'EN',
-      minCondition: 'played',
-      printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '100', url: '' },
-        { setName: '', setCode: 'LEB', collectorNum: '101', url: '' },
-      ],
-    },
-    marketFilters: { market: 'cardtrader' },
-  })
-  console.log(m2)
-  const user1Monitors = await repo.findByUserId(userId1)
-  console.log(user1Monitors)
-  const allMonitors = await repo.getAll()
-  console.log(allMonitors)
-  await repo.delete(m2.id)
-}
-
-// testCardMonitorRepository().catch(console.error)
-
-async function testCardTraderListingCatalog() {
-  const synchronizer = new CardTraderDbSynchronizer({ apis: cardTraderApis })
-  const catalog = new CardTraderListingCatalog(cardTraderApis)
-  await synchronizer.syncSetsAndBlueprints()
-  const listings = await catalog.findByCardName('Moonshadow')
-  console.log(listings)
-}
-
-// testCardTraderListingCatalog().catch(console.error)
-
-function testCardMonitorMatches() {
-  const monitor = new CardMonitor(
-    0,
-    'user1',
-    'Black Lotus',
-    new MonitorBaseFilters({
-      maxEuroCents: 1000,
-      printings: [
-        { setName: '', setCode: 'LEA', collectorNum: '233', url: '' },
-        { setName: '', setCode: 'LEB', collectorNum: '233', url: '' },
-      ],
-    }),
-    MonitorMarketFilters.create({
-      market: 'cardtrader',
-      ctZero: true,
-    }),
-    Temporal.Now.plainDateISO(),
-  )
-  const l1 = new CardListing(1,
-    {
-      name: 'Black Lotus',
-      euroCents: 1500,
-      condition: 'near-mint',
-      language: 'en',
-      foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l2 = new CardListing(2,
-    {
-      name: 'Lightning Bolt',
-      euroCents: 1,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l3 = new CardListing(3,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l4 = new CardListing(4,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l5 = new CardListing(5,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: false },
-  )
-  monitor.match([l1, l2, l3, l4, l5])
-  const matchedIds = (monitor.events[0] as CardMonitorMatched).listings.map(l => l.id)
-  const expectedIds = [3, 4] as const
-  assert(matchedIds.every((id, index) => id === expectedIds[index]))
-}
-
-// testCardMonitorMatches()

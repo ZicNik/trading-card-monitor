@@ -16,7 +16,9 @@ const schema = z.object({
 })
 
 export const APP_CONFIG = (() => {
-  dotenv.config()
+  dotenv.config({
+    path: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
+  })
   const result = schema.safeParse(process.env)
   if (!result.success)
     throw new Error(`Invalid dontenv configuration:\n\t${result.error.message}`)
