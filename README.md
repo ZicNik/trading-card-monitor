@@ -134,7 +134,7 @@ src/
 - A CardTrader API token.
 - A SQL database supported by libSQL, such as a local SQLite file.
 - A Valkey or Redis-compatible server.
-- An HTTPS-reachable webhook domain for Telegram. For local development, use a secure tunnel or a public HTTPS endpoint that forwards to your local port.
+- An HTTPS-reachable webhook domain for Telegram.
 
 ### Install
 
@@ -144,25 +144,39 @@ cd trading-card-monitor
 npm install
 ```
 
-Create a `.env` file in the project root using the configuration reference below. Keep credentials out of version control.
-
-For a local Valkey instance, if the `valkey-server` executable is installed:
+Copy the included environment template:
 
 ```bash
-npm run redis:start
+cp .env.example .env
 ```
 
-This starts Valkey on port `6380`.
+### Configure TLS
+
+Telegram webhooks require HTTPS. The app serves HTTPS directly only when both `CERT_PATH` and `KEY_PATH` are configured. Leave those paths unset if HTTPS terminates at a reverse proxy or tunnel (e.g., deployment on a hosting platform).
+
+### Add credentials
+
+Configure the `BOT_TOKEN` and API tokens.
 
 ### Prepare the database
 
-For a local database set `DB_DIALECT=sqlite` and `DB_URL` to a local path, such as `file:local.db`. Then apply the SQLite schema:
+Apply the SQLite schema:
 
 ```bash
 npm run db:push
 ```
 
-For hosted libSQL databases (see [Turso](https://turso.tech)), configure your host's database dialect, URL, and authentication token.
+With `DB_URL=file:local.db` and `DB_DIALECT=sqlite`, the configuration defaults to a local SQLite database. For hosted libSQL databases, set your host's database URL, authentication token, and also dialect if necessary (see [Drizzle with Turso](https://turso.tech)).
+
+### Start the key-value store
+
+`REDIS_URL=redis://localhost:6380` points to a local instance of the key-value store running on port `6380`. Have the `valkey-server` executable installed and start Valkey:
+
+```bash
+npm run redis:start
+```
+
+For hosted key-value stores, just set the `REDIS_URL` provided by your host and skip the above.
 
 ### Build and run
 
@@ -171,7 +185,7 @@ npm run build
 npm start
 ```
 
-The app listens on `PORT`, exposes `GET /ping` for a basic health check, and registers a Telegram webhook using `WEBHOOK_DOMAIN`. Configure your HTTPS endpoint or tunnel to forward webhook requests to the app.
+The app runs on `PORT` and registers a Telegram webhook using `WEBHOOK_DOMAIN`, with a `GET /ping` for a basic health check.
 
 ### Check the code and run tests
 
@@ -181,27 +195,25 @@ npm run lint
 npm test
 ```
 
-The test script loads `.env.test`. The current suite includes database and live API integration tests, so configure test credentials and services separately from development before running it.
+The test script loads `.env.test`. The current suite includes database and live API integration tests, so configure test credentials and services separately from development.
 
-## Configuration
+### Configuration Table
 
-Create `.env` in the repository root. The application validates the required settings at startup.
+The application validates the configuration at startup.
 
 | Variable | Required | Example | Description |
 | --- | --- | --- | --- |
 | `BOT_TOKEN` | Yes | `123456:replace-with-your-token` | Telegram bot token from BotFather. |
 | `WEBHOOK_DOMAIN` | Yes | `bot.example.com` | Public domain used to register the Telegram HTTPS webhook. Do not include a URL path. |
 | `PORT` | Yes | `3000` | Port for the webhook and health-check server. |
-| `DB_URL` | Yes | `file:local.db` | libSQL database URL. |
-| `DB_TOKEN` | No | — | Authentication token for hosted libSQL databases; omit for local SQLite. |
+| `CERT_PATH` | No | `ssl/cert.pem` | TLS certificate path. Set together with `KEY_PATH` to serve HTTPS directly. |
+| `KEY_PATH` | No | `ssl/key.pem` | TLS private key path. Set together with `CERT_PATH` to serve HTTPS directly. |
+| `DB_URL` | Yes | `file:local.db` or `libsql://db.example.com` | libSQL database URL. |
+| `DB_TOKEN` | No | `replace-with-your-token-if-any` | Authentication token for hosted libSQL databases. Omit for local SQLite. |
 | `DB_DIALECT` | For database tooling | `sqlite` or `turso` | Drizzle Kit dialect used by `npm run db:push`. |
 | `REDIS_URL` | Yes | `redis://localhost:6380` | Valkey/Redis connection URL for conversation state. |
 | `CARDTRADER_TOKEN` | Yes | `replace-with-your-token` | CardTrader API token. |
 | `DFLT_TIMEZONE` | Yes | `Europe/Rome` | Default timezone used by the application clock. |
-| `CERT_PATH` | No | `ssl/cert.pem` | TLS certificate path. Set together with `KEY_PATH` to serve HTTPS directly. |
-| `KEY_PATH` | No | `ssl/key.pem` | TLS private key path. Set together with `CERT_PATH` to serve HTTPS directly. |
-
-For local HTTPS termination at a reverse proxy or tunnel, leave `CERT_PATH` and `KEY_PATH` unset and forward traffic to the app’s `PORT`. The webhook server itself uses HTTPS only when both TLS paths are configured.
 
 ## Deployment
 
