@@ -1,7 +1,7 @@
 # Trading Card Monitor
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.x-green.svg)](https://nodejs.org/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal%20%2F%20DDD-orange.svg)](#hexagonal-architecture-and-ddd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -10,6 +10,18 @@
 > **Demo:** Replace this placeholder with a product screenshot or short GIF.
 >
 > ![Trading Card Monitor demo placeholder](docs/images/demo-placeholder.png)
+
+## Table of contents
+
+- [Problem and solution](#problem-and-solution)
+- [Key features](#key-features)
+- [Architectural highlights](#architectural-highlights)
+- [Project structure](#project-structure)
+- [Tech stack and engineering decisions](#tech-stack-and-engineering-decisions)
+- [Getting started](#getting-started)
+- [Configuration table](#configuration-table)
+- [Deployment](#deployment)
+- [Roadmap and trade-offs](#roadmap-and-trade-offs)
 
 ## Problem and solution
 
@@ -197,7 +209,7 @@ npm test
 
 The test script loads `.env.test`. The current suite includes database and live API integration tests, so configure test credentials and services separately from development.
 
-### Configuration Table
+## Configuration table
 
 The application validates the configuration at startup.
 
