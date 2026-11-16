@@ -15,6 +15,7 @@
 
 - [Problem and solution](#problem-and-solution)
 - [Key features](#key-features)
+- [Domain showcase](#domain-showcase)
 - [Architectural highlights](#architectural-highlights)
 - [Project structure](#project-structure)
 - [Tech stack and engineering decisions](#tech-stack-and-engineering-decisions)
@@ -25,7 +26,7 @@
 
 ## Problem and solution
 
-Trading card listings and prices can change quickly, and manually checking marketplaces is easy to forget. Trading Card Monitor lets you define the cards, printings, and listing criteria you care about, then checks the market on a schedule and sends matches to you through Telegram.
+Trading card listings and prices can change quickly. Manually checking marketplaces is tedious and inefficient, and you might miss out on the best deals. Trading Card Monitor lets you define the cards, printings, and listing criteria you care about, then checks the market on a schedule and sends matches to you through Telegram.
 
 ## Key features
 
@@ -33,6 +34,12 @@ Trading card listings and prices can change quickly, and manually checking marke
 - Set a maximum price and optional filters (e.g., condition, language, foil status), including market-specific ones (e.g., want to buy using the CardTrader Zero service).
 - Receive Telegram notifications when listings match your criteria.
 - Manage monitors through an interactive Telegram bot.
+
+## Domain showcase
+
+**What someone wants to track** and **what a marketplace is currently offering** are at the very heart of the domain. These two concepts are represented respectively by the `CardMonitor` and `CardListing` aggregates.
+
+Fundamentally, the core of the application revolves around matching the former against the latter. This matching adheres to domain rules, reflecting buyer expectations: optional criteria do not restrict eligibility, the card's condition is a quality threshold, and marketplace-specific services (e.g., CardTrader's **Zero** hub-based service) can affect whether an otherwise suitable offer is a match.
 
 ## Architectural highlights
 
