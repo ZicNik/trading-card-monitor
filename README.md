@@ -1,7 +1,7 @@
 # Trading Card Monitor
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.x-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.x-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green.svg)](https://nodejs.org/)
 [![Architecture](https://img.shields.io/badge/Architecture-Hexagonal%20%2F%20DDD-orange.svg)](#hexagonal-architecture-and-ddd)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -44,56 +44,76 @@ This separation makes domain behavior easier to test without Telegram, a live ma
 
 ```mermaid
 flowchart LR
-    Telegram["Telegram"]
-    Market["CardTrader"]
-    Database["SQL database"]
-    SessionStore["Valkey"]
+    TelegramUser["Telegram User"]
+    MarketAPI["CardTrader API"]
+    ScryfallAPI["Scryfall API"]
+    DB[(libSQL / SQLite)]
+    SessionStore[(Valkey / Redis)]
 
-    subgraph App["Trading Card Monitor — one Node.js process"]
-        subgraph Inbound["Driving adapter"]
-            Grammy["grammY webhook controller"]
+    subgraph App["Trading Card Monitor"]
+        subgraph Inbound["Driving Adapters"]
+            Grammy["grammY Webhook Controller"]
+            Cron["node-cron Scheduler"]
         end
 
-        subgraph Application["Application layer"]
-            BotPort["Bot input / output ports"]
-            UseCases["Use cases and command handlers"]
-            MarketPort["Card listing catalog port"]
-            RepoPort["Monitor and user repository ports"]
-            SessionPort["Conversation state storage port"]
+        subgraph Application["Application Layer"]
+            UseCases["Use Cases & Workflow Handlers"]
+            EventBus["In-Memory Event Bus"]
+            
+            subgraph Ports["Ports (Interfaces)"]
+                MarketPort["Listing Catalog Port"]
+                MetadataPort["Card Discovery Port"]
+                RepoPort["Monitor / User Repository Ports"]
+                SessionPort["Session Store Port"]
+                NotifyPort["Notification Port"]
+            end
         end
 
-        subgraph Domain["Core domain"]
-            Entities["Card monitor and listing entities"]
-            Rules["Matching and filtering rules"]
-            Events["Domain events"]
+        subgraph Domain["Core Domain (Zero External Dependencies)"]
+            Aggregates["Monitors & Listings (Aggregates)"]
+            Rules["Matching Rules & Invariants"]
+            Events["Domain Events (e.g., CardMonitorMatched)"]
         end
 
-        subgraph Outbound["Driven adapters"]
-            CardTraderAdapter["CardTrader market adapter"]
-            DrizzleAdapter["Drizzle persistence adapter"]
-            RedisAdapter["Redis-compatible session adapter"]
-            Notifier["Telegram notification adapter"]
+        subgraph Outbound["Driven Adapters"]
+            CardTraderAdapter["CardTrader Client"]
+            ScryfallAdapter["Scryfall Client"]
+            DrizzleAdapter["Drizzle ORM Adapter"]
+            RedisAdapter["Redis Session Adapter"]
+            TelegramAdapter["Telegram Bot API Notifier"]
         end
-
-        Grammy --> BotPort
-        BotPort --> UseCases
-        UseCases --> Entities
-        UseCases --> MarketPort
-        UseCases --> RepoPort
-        UseCases --> SessionPort
-        Entities --> Rules
-        Entities --> Events
-        MarketPort --> CardTraderAdapter
-        RepoPort --> DrizzleAdapter
-        SessionPort --> RedisAdapter
-        Events --> Notifier
     end
 
-    Telegram --> Grammy
-    CardTraderAdapter --> Market
-    DrizzleAdapter --> Database
+    %% Driving Flows
+    TelegramUser --> Grammy
+    Grammy --> UseCases
+    Cron --> UseCases
+
+    %% Core Application Flows
+    UseCases --> Aggregates
+    Aggregates --> Rules
+    Aggregates -.->|emits| Events
+    Events --> EventBus
+    EventBus --> NotifyPort
+
+    %% Port to Adapter Connections
+    UseCases --> MarketPort
+    UseCases --> MetadataPort
+    UseCases --> RepoPort
+    UseCases --> SessionPort
+
+    MarketPort --> CardTraderAdapter
+    MetadataPort --> ScryfallAdapter
+    RepoPort --> DrizzleAdapter
+    SessionPort --> RedisAdapter
+    NotifyPort --> TelegramAdapter
+
+    %% Outbound Infrastructure
+    CardTraderAdapter --> MarketAPI
+    ScryfallAdapter --> ScryfallAPI
+    DrizzleAdapter --> DB
     RedisAdapter --> SessionStore
-    Notifier --> Telegram
+    TelegramAdapter --> TelegramUser
 ```
 
 ### Modular monolith
