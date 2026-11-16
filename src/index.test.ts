@@ -141,66 +141,51 @@ void test('matches only valid monitor listings', () => {
     Temporal.Now.plainDateISO(),
   )
 
-  const l1 = new CardListing(1,
-    {
-      name: 'Black Lotus',
-      euroCents: 1500,
-      condition: 'near-mint',
-      language: 'en',
-      foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l2 = new CardListing(2,
-    {
-      name: 'Lightning Bolt',
-      euroCents: 1,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l3 = new CardListing(3,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: false,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l4 = new CardListing(4,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: true },
-  )
-  const l5 = new CardListing(5,
-    {
-      name: 'Black Lotus',
-      euroCents: 1000,
-      condition: 'near-mint',
-      language: 'en',
-      foil: true,
-      printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
-      seller: '',
-    },
-    { market: 'cardtrader', ctZero: false },
-  )
+  const l1 = new CardListing(1, {
+    name: 'Black Lotus',
+    euroCents: 1500,
+    condition: 'near-mint',
+    language: 'en',
+    foil: false,
+    printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '233', url: '' }),
+    seller: '',
+  }, { market: 'cardtrader', ctZero: true })
+  const l2 = new CardListing(2, {
+    name: 'Lightning Bolt',
+    euroCents: 1,
+    condition: 'near-mint',
+    language: 'en',
+    foil: true,
+    printing: new CardPrinting({ setName: '', setCode: 'LEA', collectorNum: '100', url: '' }),
+    seller: '',
+  }, { market: 'cardtrader', ctZero: true })
+  const l3 = new CardListing(3, {
+    name: 'Black Lotus',
+    euroCents: 1000,
+    condition: 'near-mint',
+    language: 'en',
+    foil: false,
+    printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+    seller: '',
+  }, { market: 'cardtrader', ctZero: true })
+  const l4 = new CardListing(4, {
+    name: 'Black Lotus',
+    euroCents: 1000,
+    condition: 'near-mint',
+    language: 'en',
+    foil: true,
+    printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+    seller: '',
+  }, { market: 'cardtrader', ctZero: true })
+  const l5 = new CardListing(5, {
+    name: 'Black Lotus',
+    euroCents: 1000,
+    condition: 'near-mint',
+    language: 'en',
+    foil: true,
+    printing: new CardPrinting({ setName: '', setCode: 'LEB', collectorNum: '233', url: '' }),
+    seller: '',
+  }, { market: 'cardtrader', ctZero: false })
 
   monitor.match([l1, l2, l3, l4, l5])
 

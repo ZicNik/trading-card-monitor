@@ -137,8 +137,7 @@ export const addCardTraderMonitorMachine = setup({
       ],
     }).toActor(),
     submitMinCondition: EditedMessage.withDynamicText((input: { minCondition: Condition | undefined }) =>
-      `${askForMinConditionMessage} *${conditionLabel(input.minCondition)}*`, { formatting: 'markdown' },
-    ).toActor(),
+      `${askForMinConditionMessage} *${conditionLabel(input.minCondition)}*`, { formatting: 'markdown' }).toActor(),
     askForLanguage: Message.withText(askForLanguageMessage, {
       keyboard: (() => {
         const languageButtons = languages.map(l => ReplyKeyboardButton.create(languageLabel(l), l))
@@ -150,16 +149,13 @@ export const addCardTraderMonitorMachine = setup({
       })(),
     }).toActor(),
     submitLanguage: EditedMessage.withDynamicText((input: { language: Language | undefined }) =>
-      `${askForLanguageMessage} *${languageLabel(input.language)}*`, { formatting: 'markdown' },
-    ).toActor(),
+      `${askForLanguageMessage} *${languageLabel(input.language)}*`, { formatting: 'markdown' }).toActor(),
     askForFoil: Message.withText(askForFoilMessage, { keyboard: yesNoAnyKeyboard }).toActor(),
     submitFoil: EditedMessage.withDynamicText((input: { foil: boolean | undefined }) =>
-      `${askForFoilMessage} *${yesNoAnyLabel(input.foil)}*`, { formatting: 'markdown' },
-    ).toActor(),
+      `${askForFoilMessage} *${yesNoAnyLabel(input.foil)}*`, { formatting: 'markdown' }).toActor(),
     askForCtZero: Message.withText(askForCtZeroMessage, { keyboard: yesNoAnyKeyboard }).toActor(),
     submitCtZero: EditedMessage.withDynamicText((input: { ctZero: boolean | undefined }) =>
-      `${askForCtZeroMessage} *${yesNoAnyLabel(input.ctZero)}*`, { formatting: 'markdown' },
-    ).toActor(),
+      `${askForCtZeroMessage} *${yesNoAnyLabel(input.ctZero)}*`, { formatting: 'markdown' }).toActor(),
     addMonitor: fromPromise(({ input, system }: { input: AddMonitorInput, system: ActorSystem<ActorSystemInfo> }) =>
       system.env.addMonitorUseCase.execute(input)),
     showAddMonitorSuccess: Message.withViewModel(({ env }) => env.monitorAddedPresenter.vm).toActor(),

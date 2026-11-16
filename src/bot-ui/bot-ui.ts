@@ -40,8 +40,7 @@ export class BotUI {
 
   start(): void {
     if (this.onAnyInput !== undefined) {
-      this.inputPort.onAny(this.onAnyInput.handler,
-        { ...(this.onAnyInput.filter !== undefined ? { filter: this.onAnyInput.filter } : {}) })
+      this.inputPort.onAny(this.onAnyInput.handler, { ...(this.onAnyInput.filter !== undefined ? { filter: this.onAnyInput.filter } : {}) })
     }
     this.commands?.forEach((command) => {
       this.inputPort.onCommand(command, context => this.send(context.chatId, { type: 'command', command: context.command }), {})

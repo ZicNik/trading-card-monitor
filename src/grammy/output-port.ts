@@ -52,7 +52,8 @@ function toGrammyInlineKeyboard(keyboard: ReplyKeyboard | undefined) {
   return keyboard === undefined
     ? {}
     : { reply_markup: new InlineKeyboard(keyboard.map(row => row.map(
-        button => ({ text: button.label, callback_data: button.payload })))) }
+        button => ({ text: button.label, callback_data: button.payload }),
+      ))) }
 }
 
 function toGrammyLinkPreview(linkPreview: boolean | undefined) {

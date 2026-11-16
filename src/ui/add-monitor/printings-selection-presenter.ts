@@ -86,7 +86,8 @@ function keyboard(printings: readonly SelectablePrinting[]): ReplyKeyboard {
     : 0
   if (placeholdersCount !== 0)
     buttonRows[buttonRows.length - 1]?.push(
-      ...Array<ReplyKeyboardButton>(placeholdersCount).fill(ReplyKeyboardButton.create('-')))
+      ...Array<ReplyKeyboardButton>(placeholdersCount).fill(ReplyKeyboardButton.create('-')),
+    )
   if (printings.some(p => p.selected))
     buttonRows.push([ReplyKeyboardButton.create('SUBMIT', printingsSubmissionPayload)])
   return buttonRows
